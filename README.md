@@ -64,7 +64,7 @@ axi_slave<256, 40, 16> slv(axi_sig);
 
 ### 4. 在仿真循环中驱动
 
-注意调用update_input()函数要在eval()前调用，以此来模拟时钟沿采样输入信号
+注意调用update_input()函数要在eval()前调用，以此来模拟时钟沿采样输入信号。
 ```cpp
 while (!Verilated::gotFinish()) {
     // ... 时钟生成 ...
@@ -90,9 +90,37 @@ while (!Verilated::gotFinish()) {
     }
 }
 ```
+
+## 运行测试
+
+### 1. 环境搭建
+
+请确保已安装以下工具：
+- Verilator (v5.038+)
+- GTKWave (可选，用于查看波形)
+- Make
+- G++ (支持 C++11 或更高版本)
+
+### 2. 执行测试
+
+进入测试目录并运行 `make` 即可编译并执行仿真。默认情况下，仿真会生成 `waveform.vcd` 波形文件。
+
+以 AXI4 接口测试为例：
+
+```bash
+cd tb/axi
+make        # 编译并运行仿真
+```
+
+### 3. 清理构建
+
+```bash
+make clean
+```
+
 ## 致谢
 
-感谢https://github.com/cyyself/soc-simulator项目给我的启发
+本项目的设计灵感来源于[soc-simulator](https://github.com/cyyself/soc-simulator)，感谢其优秀的构思。
 
 ## 版权说明
 
