@@ -120,7 +120,7 @@ make clean
 
 ## 致谢
 
-本项目的设计灵感来源于[soc-simulator](https://github.com/cyyself/soc-simulator)，感谢其优秀的构思。
+本项目的设计灵感来源于[Verilator](https://github.com/cyyself/soc-simulator)，感谢其优秀的构思。
 
 ## 版权说明
 
