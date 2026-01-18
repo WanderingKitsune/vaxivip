@@ -1,5 +1,3 @@
-# vaxivip
-
 ![Language](https://img.shields.io/badge/Language-C++-00599C.svg) ![Simulation](https://img.shields.io/badge/Simulation-Verilator-green.svg) ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 [English](#en) | [中文](#cn)
