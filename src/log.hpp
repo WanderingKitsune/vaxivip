@@ -98,12 +98,25 @@ public:
      */
     void hexdump(const std::vector<uint8_t>& data, const uint64_t base_addr, const size_t addr_width = 32, const size_t bytes_per_line = 16) {
         size_t size = data.size();
+        
+        // Determine the actual number of hex digits needed for the address.
+        // If addr_width is provided, use it to calculate width (bits / 4).
+        // If addr_width is 0 or less, fallback to a sensible default or dynamic width.
+        // Here we ensure at least 8 hex digits (32-bit address) are shown for consistency if addr_width is 32.
+        // If addresses exceed 32-bit range, one might want to use 64-bit (16 hex digits).
+        // Let's use std::max to ensure we don't print fewer digits than necessary for larger addresses in the loop,
+        // but to enforce consistency based on user-provided width, we'll stick to addr_width/4.
+        // Note: addr_width is in bits. Hex digits = bits / 4. 
+        // Example: 32 bits -> 8 hex digits. 64 bits -> 16 hex digits.
+
+        int hex_width = (addr_width + 3) / 4; 
+
         for (size_t i = 0; i < size; i += bytes_per_line) {
              // Calculate current address 
             uint64_t current_addr = base_addr + i;
 
             // Print address with specified width and hex format
-            std::cout << "0x" << std::hex << std::setw(addr_width/8) << std::setfill('0') << current_addr << " - ";
+            std::cout << "0x" << std::hex << std::setw(hex_width) << std::setfill('0') << current_addr << " - ";
 
             // Print bytes_per_line bytes
             for (size_t j = 0; j < bytes_per_line; ++j) {

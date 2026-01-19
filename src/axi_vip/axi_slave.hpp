@@ -54,7 +54,6 @@ public:
     uint32_t ar_id;
     uint8_t ar_burst;
     uint32_t r_beat_count;
-    bool r_done_pending;
     std::vector<uint8_t> r_data_accum;
 
     // Registered inputs
@@ -117,7 +116,6 @@ public:
         w_wait_next = false;
         ar_latch = false;
         r_active = false;
-        r_done_pending = false;
 
         signal_clr(&awaddr_i);
         awburst_i = 0;
@@ -313,37 +311,11 @@ public:
         }
 
         // R Phase
-        /*
-        if (r_done_pending) {
-            r_active = false;
-            *(port.rvalid) = false;
-            *(port.rlast) = false;
-            ar_latch = false; // Ready for next transaction
-            r_done_pending = false;
-            
-            log.info("[AXI-SLV] ", burst_to_string(ar_burst), " RD success !");
-
-            log.info("ADDR:0x", std::hex, ar_addr, 
-               "  LEN:", std::dec, ar_len, 
-               "  SIZE:", r_data_accum.size());
-            log.hexdump(r_data_accum, ar_addr);
-            return;
-        }
-        */
-
         if (r_active) {
             size_t bytes_per_beat = DATA_WIDTH/8;
 
-            if (rready_i) {
-                // Master accepted previous beat
-                // Log what was actually sent (sampled from bus)
+            if (*(port.rvalid) && rready_i) {
                 std::vector<uint8_t> beat_data;
-                // Currently rdata_i holds what was on the bus at the rising edge
-                // However, rdata_i is registered input. 
-                // Since this is a slave, rdata is an output. 
-                // But update_input() reads *port.rdata into rdata_i?
-                // Depending on Verilator/SystemC model, reading an output port might give current value.
-                // Let's rely on signal_get(&rdata_i...)
                 signal_get(port.rdata, beat_data, bytes_per_beat);
                 r_data_accum.insert(r_data_accum.end(), beat_data.begin(), beat_data.end());
 
