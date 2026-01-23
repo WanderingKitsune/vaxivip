@@ -75,8 +75,8 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    axis_master<256> axis_mst(axis_in_ptr);
-    axis_slave<256> axis_slv(axis_out_ptr);
+    axis_master<256, 8, 1, 1> axis_mst(axis_in_ptr);
+    axis_slave<256, 8, 1, 1> axis_slv(axis_out_ptr);
 
     top->trace(tfp, 100);
     tfp->open("waveform.vcd");
@@ -106,20 +106,23 @@ int main(int argc, char** argv) {
         if (top->axis_clk) {
             clock_count++;
             if (clock_count == 5) {
-                char data_num[100];
+                std::vector<uint8_t> data_num(100);
                 for (int i = 0; i < 100; i++) {
                     data_num[i] = i;
                 }
                 axis_mst.send(data_num, 77);
+                std::cout << "Sent packet at cycle " << clock_count << std::endl;
             }
-            if (clock_count == 40) {
-                char data_recv[100];
-                std::cout << "Data at cycle 40: ";
-                ssize_t recv_size = axis_slv.recv(100, data_recv);
-                for (int i = 0; i < recv_size; i++) {
-                    std::cout << (int)data_recv[i] << " ";
+
+            if (!axis_slv.empty()) {
+                std::vector<uint8_t> data_recv;
+                ssize_t recv_size = axis_slv.recv(data_recv);
+                std::cout << "Received packet at cycle " << clock_count << ", Size: " << recv_size << std::endl;
+                std::cout << "  Data: ";
+                for (size_t i = 0; i < data_recv.size(); i++) {
+                    std::cout << std::hex << (int)data_recv[i] << " ";
                 }
-                std::cout << "Size: " << recv_size << std::endl;
+                std::cout << std::dec << std::endl;
             }
             axis_mst.update_output();
             axis_slv.update_output();
