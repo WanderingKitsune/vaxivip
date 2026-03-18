@@ -5,6 +5,13 @@
  * @file        axis_image_test.cpp
  * @brief       AXI4-Stream Image Testbench (C++)
  * @see         https://github.com/WanderingKitsune/vaxivip
+ *
+ * @details     Verilator TB: send_frame/recv_frame one image, save BMP.
+ *
+ * Modification History:
+ * Ver   Who  Date        Changes
+ * ----  ---- ----------  -----------------------------------------------------
+ * 1.0        2025/12/30  Initial release
  ******************************************************************************/
 
 #include "Vaxis_image_test.h"
@@ -73,14 +80,7 @@ int main(int argc, char** argv) {
     uint64_t clock_count = 0;
     const uint64_t max_ticks = 500000;
 
-    bool image_sent = false;
-    bool image_received = false;
-    uint32_t pixel_idx = 0;
-    uint32_t recv_pixels = 0;
-    uint32_t expected_pixels = bmp.width * bmp.height;
-
-    Bitmap recv_bmp;
-    recv_bmp.create(bmp.width, bmp.height);
+    bool started = false;
 
     while (!Verilated::gotFinish() && tick_count < max_ticks) {
         top->axis_clk = !top->axis_clk;
@@ -93,53 +93,10 @@ int main(int argc, char** argv) {
         if (top->axis_clk) {
             clock_count++;
 
-            if (!image_sent && clock_count > 20) {
-                std::vector<uint8_t> pixel_data;
-
-                bool is_first_packet = (pixel_idx == 0);
-                uint32_t start_pixel_idx = pixel_idx;
-
-                for (uint32_t p = 0; p < PPC; p++) {
-                    uint32_t x = pixel_idx % bmp.width;
-                    uint32_t y = pixel_idx / bmp.width;
-
-                    if (y >= bmp.height) {
-                        image_sent = true;
-                        break;
-                    }
-
-                    uint32_t pixel = bmp.get_pixel(x, y);
-                    uint8_t r = (pixel >> 16) & 0xFF;
-                    uint8_t g = (pixel >> 8) & 0xFF;
-                    uint8_t b = pixel & 0xFF;
-
-                    // Pack as byte-wise RGB
-                    pixel_data.push_back(r);
-                    pixel_data.push_back(g);
-                    pixel_data.push_back(b);
-
-                    pixel_idx++;
-
-                    if (pixel_idx >= bmp.width * bmp.height) {
-                        image_sent = true;
-                        break;
-                    }
-                }
-
-                if (!pixel_data.empty()) {
-                    uint32_t remaining = (start_pixel_idx + PPC > bmp.width * bmp.height) ? 
-                                        (bmp.width * bmp.height - start_pixel_idx) : 
-                                        (bmp.width - (start_pixel_idx % bmp.width));
-                    bool eol = (remaining <= PPC);
-
-                    std::cout << "pixel_idx=" << pixel_idx << " start_pixel_idx=" << start_pixel_idx << " remaining=" << remaining << " eol=" << eol << std::endl;
-
-                    img_mst.send(pixel_data, 0, is_first_packet ? 1 : 0, is_first_packet, eol);
-
-                    if (eol) {
-                        std::cout << "Sent line: " << ((pixel_idx - 1) / bmp.width) << std::endl;
-                    }
-                }
+            if (!started && clock_count > 20) {
+                started = true;
+                img_mst.send_frame(input_bmp);
+                img_slv.recv_frame(bmp.width, bmp.height);
             }
 
             // Follow Verilator TB convention: update_input -> eval -> update_output on posedge
@@ -153,42 +110,7 @@ int main(int argc, char** argv) {
             img_mst.update_output();
             img_slv.update_output();
 
-            std::vector<uint8_t> recv_data;
-            ssize_t size = img_slv.recv(recv_data);
-
-            if (size > 0 && !image_received) {
-                uint32_t bytes_per_pixel = 3 * ((BPC + 7) / 8);
-                uint32_t pixels_in_batch = size / bytes_per_pixel;
-
-                for (uint32_t p = 0; p < pixels_in_batch; p++) {
-                    uint32_t x = recv_pixels % recv_bmp.width;
-                    uint32_t y = recv_pixels / recv_bmp.width;
-
-                    if (y >= recv_bmp.height) {
-                        image_received = true;
-                        break;
-                    }
-
-                    uint32_t offset = p * bytes_per_pixel;
-                    uint8_t r = recv_data[offset + 0];
-                    uint8_t g = recv_data[offset + 1];
-                    uint8_t b = recv_data[offset + 2];
-
-                    uint32_t color = (0xFF << 24) | (r << 16) | (g << 8) | b;
-                    recv_bmp.set_pixel(x, y, color);
-
-                    recv_pixels++;
-                }
-
-                if (recv_pixels >= expected_pixels) {
-                    image_received = true;
-                    std::cout << "Received all pixels: " << recv_pixels << std::endl;
-                }
-            }
-
-            if (image_sent && image_received) {
-                break;
-            }
+            if (started && img_mst.eof() && img_slv.eof()) break;
         }
 
         top->eval();
@@ -197,7 +119,7 @@ int main(int argc, char** argv) {
 
     tfp->close();
 
-    if (recv_bmp.write(output_bmp)) {
+    if (img_slv.save_frame(output_bmp)) {
         std::cout << "Saved output BMP: " << output_bmp << std::endl;
     } else {
         std::cerr << "Failed to save output BMP" << std::endl;
