@@ -6,7 +6,10 @@
  * @brief       AXI4-Stream BFM for axis_image_vip (master/slave)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     AXI4-Stream drive/sample logic used by axis_image_master and axis_image_slave.
+ * @details     AXI4-Stream BFM for master/slave interfaces with configurable
+ *              data width, ID, destination, and user widths.
+ *
+ * @ingroup axis_image_vip
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -23,6 +26,13 @@
 #include <queue>
 #include <vector>
 
+/**
+ * @brief AXI4-Stream master BFM for image data streaming
+ * @tparam DATA_WIDTH TDATA width in bits (default: 64)
+ * @tparam ID_WIDTH TID width in bits (default: 8)
+ * @tparam DEST_WIDTH TDEST width in bits (default: 1)
+ * @tparam USER_WIDTH TUSER width in bits (default: 1)
+ */
 template <
     uint32_t DATA_WIDTH = 64,
     uint32_t ID_WIDTH = 8,
@@ -47,12 +57,18 @@ public:
     bool        tready_i = false;                     ///< Registered input TREADY
 
     /// @brief Constructor
+    /// @param p AXI4-Stream master interface pointer
     explicit axis_image_bfm_mst(axis_master_ptr<DATA_WIDTH, ID_WIDTH, DEST_WIDTH, USER_WIDTH> p)
         : port(p) {
         byte_width = static_cast<int>(DATA_WIDTH / 8);
     }
 
     /// @brief Enqueue one transaction (tlast asserted at transaction end)
+    /// @param data Payload byte vector
+    /// @param id Transaction ID (TID)
+    /// @param dest Destination (TDEST)
+    /// @param user User data (TUSER)
+    /// @param sof Start of Frame flag (maps to TUSER[0] on first beat)
     void send(const std::vector<uint8_t>& data, uint32_t id = 0, uint32_t dest = 0,
               uint32_t user = 0, bool sof = false) {
         tx_queue.push(data);
@@ -120,6 +136,13 @@ public:
     }
 };
 
+/**
+ * @brief AXI4-Stream slave BFM for image data reception
+ * @tparam DATA_WIDTH TDATA width in bits (default: 64)
+ * @tparam ID_WIDTH TID width in bits (default: 8)
+ * @tparam DEST_WIDTH TDEST width in bits (default: 1)
+ * @tparam USER_WIDTH TUSER width in bits (default: 1)
+ */
 template <
     uint32_t DATA_WIDTH = 64,
     uint32_t ID_WIDTH = 8,
@@ -139,17 +162,21 @@ public:
     std::vector<uint8_t> tdata_i;                 ///< Registered input TDATA (byte array)
 
     /// @brief Constructor
+    /// @param p AXI4-Stream slave interface pointer
     explicit axis_image_bfm_slv(axis_slave_ptr<DATA_WIDTH, ID_WIDTH, DEST_WIDTH, USER_WIDTH> p)
         : port(p) {
         *(port.tready) = tready_o;
     }
 
     /// @brief Check if receive queue is empty
+    /// @return true if no completed transactions are queued, false otherwise
     bool empty() const {
         return rx_queue.empty();
     }
 
     /// @brief Pop one completed transaction payload
+    /// @param dst_buf Destination buffer to receive the payload
+    /// @return Size of payload in bytes, or -1 if queue is empty
     ssize_t recv(std::vector<uint8_t>& dst_buf) {
         if (rx_queue.empty()) return -1;
         dst_buf = rx_queue.front();
@@ -158,6 +185,7 @@ public:
     }
 
     /// @brief Set TREADY drive value
+    /// @param ready TREADY value to drive (true = ready, false = not ready)
     void set_tready(bool ready) {
         tready_o = ready;
     }

@@ -6,7 +6,10 @@
  * @brief       AXI Stream Image Master (BMP to AXI Stream)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     Loads BMP and drives AXI4-Stream image data (send_frame / update_output).
+ * @details     Loads BMP and drives AXI4-Stream image data with configurable
+ *              bits per channel and pixels per cycle.
+ *
+ * @ingroup axis_image_vip
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -23,17 +26,22 @@
 #include <string>
 #include <queue>
 
+/**
+ * @brief AXI4-Stream image master for BMP to stream conversion
+ * @tparam BPC Bits per channel (default: 8)
+ * @tparam PPC Pixels per cycle (default: 4)
+ */
 template <
     uint32_t BPC = 8,
     uint32_t PPC = 4
 >
 class axis_image_master {
 public:
-    /// @brief AXI4-Stream data width (RGB888, PPC pixels per beat)
+    /// @brief AXI4-Stream data width in bits (RGB888, PPC pixels per beat)
     static constexpr uint32_t DATA_WIDTH = 3 * PPC * BPC;
-    /// @brief AXI4-Stream TKEEP width
+    /// @brief AXI4-Stream TKEEP width in bytes
     static constexpr uint32_t TKEEP_WIDTH = DATA_WIDTH / 8;
-    /// @brief AXI4-Stream USER width
+    /// @brief AXI4-Stream USER width in bits (1 bit for SOF)
     static constexpr uint32_t USER_WIDTH = 1;
 
     /// @brief Logger instance
@@ -65,6 +73,8 @@ public:
           sending(false) {}
 
     /// @brief Load BMP file into internal buffer
+    /// @param filename Path to BMP file to load
+    /// @return true if BMP loaded successfully, false otherwise
     bool read_bmp(const std::string& filename) {
         bool success = bmp.read(filename);
         if (success) {
@@ -78,7 +88,7 @@ public:
         return success;
     }
 
-    /// @brief Start sending the loaded image
+    /// @brief Start sending the loaded image over AXI4-Stream
     void send_image() {
         if (img_width == 0 || img_height == 0) {
             log.error("[IMAGE-MST] No image loaded");
@@ -89,6 +99,8 @@ public:
     }
 
     /// @brief One-shot helper: read BMP then start sending
+    /// @param filename Path to BMP file to load and send
+    /// @return true if BMP loaded successfully and sending started, false otherwise
     bool read_and_send_bmp(const std::string& filename) {
         if (!read_bmp(filename)) {
             return false;
@@ -97,6 +109,9 @@ public:
         return true;
     }
 
+    /// @brief Load BMP and enqueue entire frame for streaming
+    /// @param filename Path to BMP file to load and send
+    /// @return true if BMP loaded successfully and frame enqueued, false otherwise
     bool send_frame(const std::string& filename) {
         if (!read_bmp(filename)) {
             return false;
@@ -106,21 +121,26 @@ public:
         return true;
     }
 
+    /// @brief Check if end-of-frame reached (sending completed)
+    /// @return true if sending is complete, false if still sending
     bool eof() const {
         return !sending;
     }
 
     /// @brief Check if image sending is in progress
+    /// @return true if image is currently being sent, false otherwise
     bool is_sending() const {
         return sending;
     }
 
     /// @brief Get image width in pixels
+    /// @return Current image width in pixels (0 if no image loaded)
     uint32_t width() const {
         return img_width;
     }
 
     /// @brief Get image height in pixels
+    /// @return Current image height in pixels (0 if no image loaded)
     uint32_t height() const {
         return img_height;
     }
@@ -130,7 +150,7 @@ public:
         axis_mst.update_input();
     }
 
-    /// @brief Drive outputs to DUT
+    /// @brief Drive outputs to DUT and check if sending complete
     void update_output() {
         axis_mst.update_output();
         if (!sending) return;
@@ -142,6 +162,7 @@ public:
     }
 
 private:
+    /// @brief Enqueue all image lines as AXI4-Stream transactions
     void enqueue_frame_lines() {
         if (img_width == 0 || img_height == 0) return;
 

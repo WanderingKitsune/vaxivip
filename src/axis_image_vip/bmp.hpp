@@ -5,6 +5,16 @@
  * @file        bmp.hpp
  * @brief       BMP Image Processing Class
  * @see         https://github.com/WanderingKitsune/vaxivip
+ *
+ * @details     BMP image read/write support for 24-bit and 32-bit uncompressed
+ *              formats with bottom‑up pixel ordering.
+ *
+ * @ingroup axis_image_vip
+ *
+ * Modification History:
+ * Ver   Who  Date        Changes
+ * ----  ---- ----------  -----------------------------------------------------
+ * 1.0        2025/12/30  Initial release
  ******************************************************************************/
 
 #ifndef BMP_HPP
@@ -17,15 +27,24 @@
 #include <string>
 #include <stdexcept>
 
+/**
+ * @brief BMP image container with read/write capabilities
+ * @details Stores pixel data in ARGB format (8 bits per channel, alpha channel optional).
+ *          Supports 24‑bit and 32‑bit uncompressed BMP files with bottom‑up row order.
+ */
 class Bitmap {
 public:
-    uint32_t width;
-    uint32_t height;
-    uint16_t bit_count;
-    std::vector<std::vector<uint32_t>> data;
+    uint32_t width;                            ///< Image width in pixels
+    uint32_t height;                           ///< Image height in pixels
+    uint16_t bit_count;                        ///< Bits per pixel (24 or 32)
+    std::vector<std::vector<uint32_t>> data;   ///< Pixel data [height][width] in ARGB format
 
+    /// @brief Default constructor
     Bitmap() : width(0), height(0), bit_count(0) {}
 
+    /// @brief Read BMP file from disk
+    /// @param filename Path to BMP file
+    /// @return true if file read successfully, false otherwise
     bool read(const std::string& filename) {
         std::ifstream file(filename, std::ios::binary);
         if (!file.is_open()) {
@@ -102,6 +121,9 @@ public:
         return true;
     }
 
+    /// @brief Write BMP file to disk
+    /// @param filename Path to output BMP file
+    /// @return true if file written successfully, false otherwise
     bool write(const std::string& filename) const {
         if (width == 0 || height == 0) {
             return false;
@@ -168,6 +190,10 @@ public:
         return true;
     }
 
+    /// @brief Get pixel color at specified coordinates
+    /// @param x X coordinate (0‑based, left to right)
+    /// @param y Y coordinate (0‑based, top to bottom)
+    /// @return ARGB color value (0xAARRGGBB), or 0 if out of bounds
     uint32_t get_pixel(uint32_t x, uint32_t y) const {
         if (x >= width || y >= height) {
             return 0;
@@ -175,6 +201,10 @@ public:
         return data[y][x];
     }
 
+    /// @brief Set pixel color at specified coordinates
+    /// @param x X coordinate (0‑based, left to right)
+    /// @param y Y coordinate (0‑based, top to bottom)
+    /// @param color ARGB color value (0xAARRGGBB)
     void set_pixel(uint32_t x, uint32_t y, uint32_t color) {
         if (x >= width || y >= height) {
             return;
@@ -182,6 +212,9 @@ public:
         data[y][x] = color;
     }
 
+    /// @brief Create a new blank image with specified dimensions
+    /// @param w Image width in pixels
+    /// @param h Image height in pixels
     void create(uint32_t w, uint32_t h) {
         width = w;
         height = h;

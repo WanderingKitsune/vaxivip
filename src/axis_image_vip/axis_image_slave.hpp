@@ -6,7 +6,10 @@
  * @brief       AXI Stream Image Slave (AXI Stream to BMP)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     Receives AXI4-Stream image by preset resolution and writes BMP (recv_frame / update_output).
+ * @details     Receives AXI4-Stream image by preset resolution and writes BMP with
+ *              configurable bits per channel and pixels per cycle.
+ *
+ * @ingroup axis_image_vip
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -23,24 +26,41 @@
 #include <string>
 #include <queue>
 
+/**
+ * @brief AXI4-Stream image slave for stream to BMP conversion
+ * @tparam BPC Bits per channel (default: 8)
+ * @tparam PPC Pixels per cycle (default: 4)
+ */
 template <
     uint32_t BPC = 8,
     uint32_t PPC = 4
 >
 class axis_image_slave {
 public:
+    /// @brief AXI4-Stream data width in bits (RGB888, PPC pixels per beat)
     static constexpr uint32_t DATA_WIDTH = 3 * PPC * BPC;
+    /// @brief AXI4-Stream TKEEP width in bytes
     static constexpr uint32_t TKEEP_WIDTH = DATA_WIDTH / 8;
+    /// @brief AXI4-Stream USER width in bits (1 bit for SOF)
     static constexpr uint32_t USER_WIDTH = 1;
 
+    /// @brief Logger instance
     Log log;
+    /// @brief Underlying AXI4-Stream slave BFM
     axis_image_bfm_slv<DATA_WIDTH, 1, 1, USER_WIDTH> axis_slv;
+    /// @brief Bitmap image buffer for received pixels
     Bitmap bmp;
+    /// @brief Image width in pixels (preset before receiving)
     uint32_t img_width;
+    /// @brief Image height in pixels (preset before receiving)
     uint32_t img_height;
+    /// @brief Current pixel index (0‑based, row‑major)
     uint32_t pixel_idx;
+    /// @brief Whether the image is being received
     bool receiving;
 
+    /// @brief Constructor
+    /// @param port AXI4-Stream slave interface pointer
     axis_image_slave(const axis_slave_ptr<DATA_WIDTH, 1, 1, USER_WIDTH>& port)
         : axis_slv(port),
           img_width(0),
@@ -48,6 +68,9 @@ public:
           pixel_idx(0),
           receiving(false) {}
 
+    /// @brief Prepare to receive an image of specified dimensions
+    /// @param width Image width in pixels
+    /// @param height Image height in pixels
     void receive_image(uint32_t width, uint32_t height) {
         img_width  = width;
         img_height = height;
@@ -58,30 +81,43 @@ public:
                  width, "x", height);
     }
 
+    /// @brief Prepare to receive an image of specified dimensions (alias of receive_image)
+    /// @param width Image width in pixels
+    /// @param height Image height in pixels
     void recv_frame(uint32_t width, uint32_t height) {
         receive_image(width, height);
     }
 
+    /// @brief Check if image reception is in progress
+    /// @return true if image is currently being received, false otherwise
     bool is_receiving() const {
         return receiving;
     }
 
+    /// @brief Check if end-of-frame reached (reception completed)
+    /// @return true if reception is complete, false if still receiving
     bool eof() const {
         return !receiving;
     }
 
+    /// @brief Check if receive queue is empty
+    /// @return true if no completed transactions are queued, false otherwise
     bool empty() {
         return axis_slv.empty();
     }
 
+    /// @brief Set TREADY drive value
+    /// @param ready TREADY value to drive (true = ready, false = not ready)
     void set_tready(bool ready) {
         axis_slv.set_tready(ready);
     }
 
+    /// @brief Update registered inputs from DUT
     void update_input() {
         axis_slv.update_input();
     }
 
+    /// @brief Drive outputs to DUT and process received data
     void update_output() {
         axis_slv.update_output();
         if (!receiving) return;
@@ -161,6 +197,9 @@ public:
         }
     }
 
+    /// @brief Save received image to BMP file
+    /// @param filename Path to output BMP file
+    /// @return true if BMP saved successfully, false otherwise
     bool save_bmp(const std::string& filename) {
         bool success = bmp.write(filename);
         if (success) {
@@ -171,6 +210,9 @@ public:
         return success;
     }
 
+    /// @brief Save received image to BMP file (alias of save_bmp)
+    /// @param filename Path to output BMP file
+    /// @return true if BMP saved successfully, false otherwise
     bool save_frame(const std::string& filename) {
         return save_bmp(filename);
     }
