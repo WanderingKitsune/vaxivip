@@ -5,13 +5,21 @@
  * @file        axis_image_master.hpp
  * @brief       AXI Stream Image Master (BMP to AXI Stream)
  * @see         https://github.com/WanderingKitsune/vaxivip
+ *
+ * @details     Loads BMP and drives AXI4-Stream image data (send_frame / update_output).
+ *
+ * Modification History:
+ * Ver   Who  Date        Changes
+ * ----  ---- ----------  -----------------------------------------------------
+ * 1.0        2025/12/30  Initial release
  ******************************************************************************/
 
 #ifndef AXIS_IMAGE_MASTER_HPP
 #define AXIS_IMAGE_MASTER_HPP
 
+#include "axis_image_bfm.hpp"
 #include "bmp.hpp"
-#include "axis_vip.hpp"
+#include "log.hpp"
 #include <string>
 #include <queue>
 
@@ -32,7 +40,7 @@ public:
     Log log;
 
     /// @brief Underlying AXI4-Stream master BFM
-    axis_master<DATA_WIDTH, 1, 1, USER_WIDTH> axis_mst;
+    axis_image_bfm_mst<DATA_WIDTH, 1, 1, USER_WIDTH> axis_mst;
 
     /// @brief Loaded bitmap image
     Bitmap bmp;
@@ -89,6 +97,19 @@ public:
         return true;
     }
 
+    bool send_frame(const std::string& filename) {
+        if (!read_bmp(filename)) {
+            return false;
+        }
+        enqueue_frame_lines();
+        sending = true;
+        return true;
+    }
+
+    bool eof() const {
+        return !sending;
+    }
+
     /// @brief Check if image sending is in progress
     bool is_sending() const {
         return sending;
@@ -104,17 +125,6 @@ public:
         return img_height;
     }
 
-    /// @brief Queue one AXI packet (thin wrapper to underlying AXIS master)
-    void send(const std::vector<uint8_t>& data,
-              uint32_t /*dest*/ = 0,
-              uint32_t user = 0,
-              bool sof = false,
-              bool /*eol*/ = false) {
-        // Map image parameters to generic AXIS fields:
-        // id = 0, dest ignored here, user/sof passed through.
-        axis_mst.send(data, 0, 0, user, sof);
-    }
-
     /// @brief Update registered inputs from DUT
     void update_input() {
         axis_mst.update_input();
@@ -123,58 +133,34 @@ public:
     /// @brief Drive outputs to DUT
     void update_output() {
         axis_mst.update_output();
+        if (!sending) return;
+        if (axis_mst.tx_buf.empty() && axis_mst.tx_queue.empty()) {
+            sending = false;
+            log.info("[IMAGE-MST] Image send complete. Resolution=",
+                     img_width, "x", img_height);
+        }
     }
 
-    /// @brief Generate AXI packets from BMP pixels when ready
-    void update() {
-        if (!sending) {
-            return;
-        }
-        if (!axis_mst.get_tready()) {
-            return;
-        }
+private:
+    void enqueue_frame_lines() {
+        if (img_width == 0 || img_height == 0) return;
 
-        std::vector<uint8_t> pixel_data;
+        for (uint32_t y = 0; y < img_height; y++) {
+            std::vector<uint8_t> line_data;
+            line_data.reserve(img_width * 3);
 
-        // Pack pixels as byte-wise RGB: [R, G, B] per pixel
-        bool start_of_frame = (pixel_idx == 0);
-        for (uint32_t p = 0; p < PPC; p++) {
-            uint32_t x = pixel_idx % img_width;
-            uint32_t y = pixel_idx / img_width;
-
-            if (y >= img_height) {
-                sending = false;
-                log.info("[IMAGE-MST] Image send complete. Resolution=",
-                         img_width, "x", img_height);
-                break;
+            for (uint32_t x = 0; x < img_width; x++) {
+                uint32_t pixel = bmp.get_pixel(x, y);
+                uint8_t  r     = (pixel >> 16) & 0xFF;
+                uint8_t  g     = (pixel >> 8) & 0xFF;
+                uint8_t  b     = pixel & 0xFF;
+                line_data.push_back(r);
+                line_data.push_back(g);
+                line_data.push_back(b);
             }
 
-            uint32_t pixel = bmp.get_pixel(x, y);
-            uint8_t r = (pixel >> 16) & 0xFF;
-            uint8_t g = (pixel >> 8) & 0xFF;
-            uint8_t b = pixel & 0xFF;
-
-            pixel_data.push_back(r);
-            pixel_data.push_back(g);
-            pixel_data.push_back(b);
-
-            pixel_idx++;
-        }
-
-        if (!pixel_data.empty()) {
-            uint32_t last_x   = (pixel_idx - 1) % img_width;
-            uint32_t last_y   = (pixel_idx - 1) / img_width;
-            bool     eol      = (last_x >= img_width - PPC);
-
-            // SOF only for very first beat of the whole frame
-            bool sof = start_of_frame;
-            axis_mst.send(pixel_data, 0, 0, 0, sof);
-
-            if (eol) {
-                log.info("[IMAGE-MST] Sent line ", last_y,
-                         " / height=", img_height,
-                         ", line_pixels_per_beat=", PPC);
-            }
+            bool sof = (y == 0);
+            axis_mst.send(line_data, 0, 0, 0, sof);
         }
     }
 };
