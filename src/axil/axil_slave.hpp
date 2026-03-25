@@ -17,7 +17,7 @@
 #ifndef AXIL_SLAVE_HPP
 #define AXIL_SLAVE_HPP
 
-#include "axil.hpp"
+#include "axil_ptr.hpp"
 #include "log.hpp"
 #include <map>
 

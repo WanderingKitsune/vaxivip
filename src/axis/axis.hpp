@@ -2,22 +2,22 @@
  * Copyright (C) 2025 WanderingKitsune. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
- * @file        axil_vip.hpp
- * @brief       AXI4-Lite VIP (Verification IP)
+ * @file        axis.hpp
+ * @brief       AXI4-Stream VIP (Verification IP)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     This module implements the VIP for AXI4-Lite protocol verification.
+ * @details     This module implements the VIP for AXI4-Stream protocol verification.
  *
  * Modification History:
  * Ver   Who  Date        Changes
  * ----  ---- ----------  -----------------------------------------------------
- * 1.0        2025/12/30  Initial release (Separated from axil.hpp)
+ * 1.0        2025/12/30  Initial release (Separated from axis.hpp)
  ******************************************************************************/
 
-#ifndef AXIL_VIP_HPP
-#define AXIL_VIP_HPP
+#ifndef AXIS_HPP
+#define AXIS_HPP
 
-#include "axil_master.hpp"
-#include "axil_slave.hpp"
+#include "axis_master.hpp"
+#include "axis_slave.hpp"
 
 #endif

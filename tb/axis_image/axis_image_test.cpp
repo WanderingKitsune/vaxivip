@@ -6,7 +6,8 @@
  * @brief       AXI4-Stream Image Testbench (C++)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     Verilator TB: send_frame/recv_frame one image, save BMP.
+ * @details     Verilator C++ TB: one image send/recv, save BMP. VIP: `src/axis_image/axis_image_vip.hpp`
+ *              (stream structs from `src/axis/` via that header; include dirs from `tb/axis_image/Makefile`).
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -17,7 +18,7 @@
 #include "Vaxis_image_test.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
-#include "axis_image_vip.hpp"
+#include "axis_image.hpp"
 
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);

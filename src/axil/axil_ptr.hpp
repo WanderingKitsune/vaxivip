@@ -2,7 +2,7 @@
  * Copyright (C) 2025 WanderingKitsune. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
- * @file        axil.hpp
+ * @file        axil_ptr.hpp
  * @brief       AXI4-Lite Interface Definitions
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
@@ -15,8 +15,8 @@
  * 1.0        2025/12/25  Initial release
  ******************************************************************************/
 
-#ifndef AXIL_HPP
-#define AXIL_HPP
+#ifndef AXIL_PTR_HPP
+#define AXIL_PTR_HPP
 
 #include <cstdint>
 #include <cstring>

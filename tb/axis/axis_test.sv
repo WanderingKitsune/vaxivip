@@ -4,6 +4,7 @@
 // 
 // File:        axis_test.sv
 // Description: AXI4-Stream Test Module
+// Note:        C++ DPI uses VIP headers under ../../src/axis/ (see tb/axis/Makefile -I).
 // Repository:  https://github.com/WanderingKitsune/vaxivip
 // 
 // Modification History:

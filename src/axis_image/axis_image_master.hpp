@@ -9,7 +9,7 @@
  * @details     Loads BMP and drives AXI4-Stream image data with configurable
  *              bits per channel and pixels per cycle.
  *
- * @ingroup axis_image_vip
+ * @ingroup axis_image
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -20,7 +20,7 @@
 #ifndef AXIS_IMAGE_MASTER_HPP
 #define AXIS_IMAGE_MASTER_HPP
 
-#include "axis_image_bfm.hpp"
+#include "axis_master.hpp"
 #include "bmp.hpp"
 #include "log.hpp"
 #include <string>
@@ -48,7 +48,7 @@ public:
     Log log;
 
     /// @brief Underlying AXI4-Stream master BFM
-    axis_image_bfm_mst<DATA_WIDTH, 1, 1, USER_WIDTH> axis_mst;
+    axis_master<DATA_WIDTH, 1, 1, USER_WIDTH> axis_mst;
 
     /// @brief Loaded bitmap image
     Bitmap bmp;
@@ -70,7 +70,9 @@ public:
           img_width(0),
           img_height(0),
           pixel_idx(0),
-          sending(false) {}
+          sending(false) {
+        axis_mst.log.quiet = true;
+    }
 
     /// @brief Load BMP file into internal buffer
     /// @param filename Path to BMP file to load

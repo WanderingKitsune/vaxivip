@@ -13,10 +13,10 @@
 
 | VIP Module | Protocol | Core Features | Typical Use Case |
 |------------|----------|---------------|------------------|
-| **`axi_vip`** | AXI4 | Memory-mapped read/write, burst transfers | Processor/memory bus verification |
-| **`axil_vip`** | AXI4-Lite | Simple register access | Peripheral register access verification |
-| **`axis_vip`** | AXI4-Stream | Stream data transfer | Video streaming, network packet transmission |
-| **`axis_image_vip`** | AXI4-Stream | BMP image streaming with configurable BPC/PPC (Xilinx AXI4-Stream Video compliant) | Image processing IP verification (BMP I/O) |
+| **`axi`** (`src/axi/`) | AXI4 | Memory-mapped read/write, burst transfers | Processor/memory bus verification |
+| **`axil`** (`src/axil/`) | AXI4-Lite | Simple register access | Peripheral register access verification |
+| **`axis`** (`src/axis/`) | AXI4-Stream | Stream data transfer | Video streaming, network packet transmission |
+| **`axis_image`** (`src/axis_image/`) | AXI4-Stream | BMP image streaming with configurable BPC/PPC (Xilinx AXI4-Stream Video compliant) | Image processing IP verification (BMP I/O) |
 
 ## 🚀 Quick Start
 
@@ -60,10 +60,12 @@ make clean
 ```
 .
 ├── src/                # VIP source code
-│   ├── axi_vip/        # AXI4 VIP (Master/Slave)
-│   ├── axil_vip/       # AXI4-Lite VIP (Master/Slave)
-│   ├── axis_vip/       # AXI4-Stream VIP (Master/Slave)
-│   └── axis_image_vip/ # AXI4-Stream Image VIP (BMP support)
+│   ├── axi/            # AXI4: axi_ptr.hpp, axi.hpp, axi_master.hpp, axi_slave.hpp, axi_common.hpp
+│   ├── axil/           # AXI4-Lite: axil_ptr.hpp, axil.hpp, axil_master.hpp, axil_slave.hpp
+│   ├── axis/           # AXI4-Stream: axis_prt.hpp, axis.hpp, axis_master.hpp, axis_slave.hpp
+│   ├── axis_image/     # AXI4-Stream image: axis_image_vip.hpp, axis_image_*.hpp, bmp.hpp
+│   ├── log.hpp         # Shared logging
+│   └── sig.hpp         # Shared signal helpers
 ├── tb/                 # Testbenches and examples
 │   ├── axi/            # AXI4 tests
 │   ├── axil/           # AXI4-Lite tests
@@ -73,11 +75,16 @@ make clean
 ```
 
 ### 1. Include Headers
+Add each relevant directory under `src/` to your compiler include path (e.g. `-Isrc/axi -Isrc/axil ...`, as in `tb/*/Makefile`). Then:
+
 ```cpp
-#include "axi_vip/axi_vip.hpp"        // AXI4 VIP
-#include "axil_vip/axil_vip.hpp"      // AXI4-Lite VIP  
-#include "axis_vip/axis_vip.hpp"      // AXI4-Stream VIP
-#include "axis_image_vip/axis_image_vip.hpp"  // AXI4-Stream Image VIP
+#include "axi_ptr.hpp"        // AXI4 signal structs (optional if only using BFM umbrella)
+#include "axi.hpp"            // AXI4 VIP (master + slave)
+#include "axil_ptr.hpp"
+#include "axil.hpp"           // AXI4-Lite VIP
+#include "axis_prt.hpp"       // AXI4-Stream signal structs (optional)
+#include "axis.hpp"           // AXI4-Stream VIP
+#include "axis_image_vip.hpp" // AXI4-Stream image VIP
 ```
 
 ### 2. Bind Signals
@@ -134,7 +141,7 @@ while (!Verilated::gotFinish()) {
 
 ### 5. AXI4-Stream Image VIP Special Features
 
-**Standard Compliance**: The axis_image_vip module follows the **Xilinx AXI4-Stream Video IP and System Design** standard, ensuring compatibility with Xilinx/AMD video processing IP cores. For detailed specifications, refer to the [Xilinx AXI Video IP Product Guide](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip).
+**Standard Compliance**: The `axis_image` module follows the **Xilinx AXI4-Stream Video IP and System Design** standard, ensuring compatibility with Xilinx/AMD video processing IP cores. For detailed specifications, refer to the [Xilinx AXI Video IP Product Guide](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip).
 
 **Image Master** (BMP to AXI4-Stream):
 ```cpp
@@ -206,10 +213,10 @@ Copyright (c) 2025 WanderingKitsune
 
 | VIP模块 | 协议 | 核心功能 | 典型应用 |
 |---------|------|----------|----------|
-| **`axi_vip`** | AXI4 | 内存映射读写、突发传输 | 处理器/内存总线验证 |
-| **`axil_vip`** | AXI4-Lite | 简单寄存器访问 | 外设寄存器访问验证 |
-| **`axis_vip`** | AXI4-Stream | 流数据传输 | 视频流、网络包传输 |
-| **`axis_image_vip`** | AXI4-Stream | BMP图像流，可配置BPC/PPC (遵循Xilinx AXI4-Stream Video标准) | 图像处理IP验证（BMP输入/输出） |
+| **`axi`**（`src/axi/`） | AXI4 | 内存映射读写、突发传输 | 处理器/内存总线验证 |
+| **`axil`**（`src/axil/`） | AXI4-Lite | 简单寄存器访问 | 外设寄存器访问验证 |
+| **`axis`**（`src/axis/`） | AXI4-Stream | 流数据传输 | 视频流、网络包传输 |
+| **`axis_image`**（`src/axis_image/`） | AXI4-Stream | BMP图像流，可配置BPC/PPC (遵循Xilinx AXI4-Stream Video标准) | 图像处理IP验证（BMP输入/输出） |
 
 ## 🚀 快速开始
 
@@ -251,10 +258,12 @@ make clean
 ```
 .
 ├── src/                # VIP源代码
-│   ├── axi_vip/        # AXI4 VIP (Master/Slave)
-│   ├── axil_vip/       # AXI4-Lite VIP (Master/Slave)
-│   ├── axis_vip/       # AXI4-Stream VIP (Master/Slave)
-│   └── axis_image_vip/ # AXI4-Stream 图像VIP (支持BMP)
+│   ├── axi/            # AXI4：axi_ptr.hpp, axi.hpp, axi_master.hpp, axi_slave.hpp, axi_common.hpp
+│   ├── axil/           # AXI4-Lite：axil_ptr.hpp, axil.hpp, axil_master.hpp, axil_slave.hpp
+│   ├── axis/           # AXI4-Stream：axis_prt.hpp, axis.hpp, axis_master.hpp, axis_slave.hpp
+│   ├── axis_image/     # AXI4-Stream 图像：axis_image_vip.hpp, axis_image_*.hpp, bmp.hpp
+│   ├── log.hpp         # 公共日志
+│   └── sig.hpp         # 公共信号辅助
 ├── tb/                 # 测试用例和示例
 │   ├── axi/            # AXI4 测试
 │   ├── axil/           # AXI4-Lite 测试
@@ -264,11 +273,16 @@ make clean
 ```
 
 ### 1. 引入头文件
+将 `src` 下对应子目录加入编译 `-I` 路径（示例见各 `tb/*/Makefile`）。然后：
+
 ```cpp
-#include "axi_vip/axi_vip.hpp"        // AXI4 VIP
-#include "axil_vip/axil_vip.hpp"      // AXI4-Lite VIP  
-#include "axis_vip/axis_vip.hpp"      // AXI4-Stream VIP
-#include "axis_image_vip/axis_image_vip.hpp"  // AXI4-Stream 图像VIP
+#include "axi_ptr.hpp"        // AXI4 信号结构（可省略，若只通过总头使用 BFM）
+#include "axi.hpp"            // AXI4 VIP
+#include "axil_ptr.hpp"
+#include "axil.hpp"           // AXI4-Lite VIP
+#include "axis_prt.hpp"       // AXI4-Stream 信号结构（可省略）
+#include "axis.hpp"           // AXI4-Stream VIP
+#include "axis_image_vip.hpp" // AXI4-Stream 图像 VIP
 ```
 
 ### 2. 绑定信号
@@ -325,7 +339,7 @@ while (!Verilated::gotFinish()) {
 
 ### 5. AXI4-Stream 图像VIP特殊功能
 
-**标准遵循**：axis_image_vip 模块遵循 **Xilinx AXI4-Stream Video IP and System Design** 标准，确保与 Xilinx/AMD 视频处理 IP 核的兼容性。详细规范请参考 [Xilinx AXI Video IP 产品指南](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip)。
+**标准遵循**：`axis_image` 模块遵循 **Xilinx AXI4-Stream Video IP and System Design** 标准，确保与 Xilinx/AMD 视频处理 IP 核的兼容性。详细规范请参考 [Xilinx AXI Video IP 产品指南](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip)。
 
 **图像Master** (BMP转AXI4-Stream):
 ```cpp

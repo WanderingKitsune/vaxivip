@@ -9,7 +9,7 @@
  * @details     Receives AXI4-Stream image by preset resolution and writes BMP with
  *              configurable bits per channel and pixels per cycle.
  *
- * @ingroup axis_image_vip
+ * @ingroup axis_image
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -20,7 +20,7 @@
 #ifndef AXIS_IMAGE_SLAVE_HPP
 #define AXIS_IMAGE_SLAVE_HPP
 
-#include "axis_image_bfm.hpp"
+#include "axis_slave.hpp"
 #include "bmp.hpp"
 #include "log.hpp"
 #include <string>
@@ -47,7 +47,7 @@ public:
     /// @brief Logger instance
     Log log;
     /// @brief Underlying AXI4-Stream slave BFM
-    axis_image_bfm_slv<DATA_WIDTH, 1, 1, USER_WIDTH> axis_slv;
+    axis_slave<DATA_WIDTH, 1, 1, USER_WIDTH> axis_slv;
     /// @brief Bitmap image buffer for received pixels
     Bitmap bmp;
     /// @brief Image width in pixels (preset before receiving)
@@ -66,7 +66,9 @@ public:
           img_width(0),
           img_height(0),
           pixel_idx(0),
-          receiving(false) {}
+          receiving(false) {
+        axis_slv.log.quiet = true;
+    }
 
     /// @brief Prepare to receive an image of specified dimensions
     /// @param width Image width in pixels

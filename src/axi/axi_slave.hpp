@@ -17,7 +17,7 @@
 #ifndef AXI_SLAVE_HPP
 #define AXI_SLAVE_HPP
 
-#include "axi.hpp"
+#include "axi_ptr.hpp"
 #include "axi_common.hpp"
 #include "log.hpp"
 #include <map>

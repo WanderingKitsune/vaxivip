@@ -9,7 +9,7 @@
  * @details     Image-to-AXI and AXI-to-image VIP for BMP file streaming with
  *              configurable bits per channel and pixels per cycle.
  *
- * @defgroup axis_image_vip AXI Stream Image VIP Library
+ * @defgroup axis_image AXI Stream Image VIP Library
  * @brief AXI4-Stream image verification components for BMP to/from AXI stream conversion
  * @ingroup vaxivip
  *
@@ -21,14 +21,14 @@
  * 1.0        2025/12/30  Initial release
  ******************************************************************************/
 
-#ifndef AXIS_IMAGE_VIP_HPP
-#define AXIS_IMAGE_VIP_HPP
+#ifndef AXIS_IMAGE_HPP
+#define AXIS_IMAGE_HPP
 
 #include "axis.hpp"
 #include "bmp.hpp"
 #include "axis_image_master.hpp"
 #include "axis_image_slave.hpp"
 
-/** @} */ // end of group axis_image_vip
+/** @} */ // end of group axis_image
 
 #endif

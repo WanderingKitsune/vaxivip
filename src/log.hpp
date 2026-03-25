@@ -32,6 +32,8 @@ private:
     }
 
 public:
+    bool quiet = false;
+
     /**
      * @brief Logs an informational message.
      * 
@@ -39,6 +41,7 @@ public:
      */
     template<typename... Args>
     void info(const Args&... args) {
+        if (quiet) return;
         std::stringstream ss;
         format_msg(ss, args...);
         std::string msg = ss.str();
@@ -56,6 +59,7 @@ public:
      */
     template<typename... Args>
     void warning(const Args&... args) {
+        if (quiet) return;
         std::stringstream ss;
         format_msg(ss, args...);
         std::cout << "\033[1;33m" << "[WARN] " << ss.str() << "\033[0m" << std::endl;
@@ -80,6 +84,7 @@ public:
      */
     template<typename... Args>
     void debug(const Args&... args) {
+        if (quiet) return;
         std::stringstream ss;
         format_msg(ss, args...);
         std::cout << "\033[1;36m" << "[DEBG] " << ss.str() << "\033[0m" << std::endl;
@@ -97,6 +102,7 @@ public:
      * @param bytes_per_line Number of bytes per line (default: 16).
      */
     void hexdump(const std::vector<uint8_t>& data, const uint64_t base_addr, const size_t addr_width = 32, const size_t bytes_per_line = 16) {
+        if (quiet) return;
         size_t size = data.size();
         
         // Determine the actual number of hex digits needed for the address.

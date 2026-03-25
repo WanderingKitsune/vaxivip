@@ -6,8 +6,8 @@
  * @brief       AXI4-Lite Testbench (C++)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     This file contains the C++ testbench for verifying the
- *              AXI4-Lite interface using Verilator.
+ * @details     Verilator C++ TB for AXI4-Lite. VIP: `src/axil/axil_ptr.hpp`, `src/axil/axil.hpp`
+ *              (include dirs from `tb/axil/Makefile`).
  *
  * Modification History:
  * Ver   Who  Date        Changes
@@ -20,8 +20,8 @@
 #include "verilated_vcd_c.h"
 #include <svdpi.h>
 #include <iostream>
+#include "axil_ptr.hpp"
 #include "axil.hpp"
-#include "axil_vip/axil_vip.hpp"
 
 /**
  * @brief Connect BFM pointers to Verilator model signals

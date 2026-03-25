@@ -4,6 +4,7 @@
 // 
 // File:        axi_test.sv
 // Description: AXI4 Test Module
+// Note:        C++ DPI uses VIP headers under ../../src/axi/ (see tb/axi/Makefile -I).
 // Repository:  https://github.com/WanderingKitsune/vaxivip
 // 
 // Modification History:

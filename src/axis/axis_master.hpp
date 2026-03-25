@@ -2,7 +2,7 @@
  * Copyright (C) 2025 WanderingKitsune. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
- * @file        axis_vip.hpp
+ * @file        axis_master.hpp
  * @brief       AXI4-Stream VIP (Verification IP)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
@@ -14,10 +14,10 @@
  * 1.0        2025/12/30  Initial release (Separated from axis.hpp)
  ******************************************************************************/
 
-#ifndef AXIS_VIP_HPP
-#define AXIS_VIP_HPP
+#ifndef AXIS_MASTER_HPP
+#define AXIS_MASTER_HPP
 
-#include "axis.hpp"
+#include "axis_prt.hpp"
 #include "log.hpp"
 #include <cstring>
 #include <queue>
@@ -151,94 +151,6 @@ public:
                 }
             }
         }
-    }
-};
-
-/// @brief AXI4-Stream Slave BFM
-template <
-    uint32_t DATA_WIDTH = 64,
-    uint32_t ID_WIDTH = 8,
-    uint32_t DEST_WIDTH = 1,
-    uint32_t USER_WIDTH = 1
->
-class axis_slave {
-public:
-    Log log;
-    std::vector<uint8_t> recv_buf;          ///< Buffer for currently receiving packet
-    std::queue<std::vector<uint8_t>> rx_queue;///< Queue of received packets
-    axis_slave_ptr<DATA_WIDTH, ID_WIDTH, DEST_WIDTH, USER_WIDTH> port;        ///< Interface signal pointers
-
-    // Registered Input Signals
-    bool tready_o;
-    bool tvalid_i;
-    uint64_t tkeep_i;
-    bool tlast_i;
-    uint32_t tuser_i;
-    std::vector<uint8_t> tdata_i;
-
-    /// @brief Constructor
-    axis_slave(axis_slave_ptr<DATA_WIDTH, ID_WIDTH, DEST_WIDTH, USER_WIDTH> port):port(port) {
-        tready_o = true; // always tready
-        *(port.tready) = tready_o;
-        tvalid_i = false;
-        tkeep_i = 0;
-        tlast_i = false;
-        tuser_i = 0;
-    }
-
-    /// @brief Destructor
-    ~axis_slave() = default;
-
-    /// @brief Check if the receive queue is empty
-    bool empty() {
-        return rx_queue.empty();
-    }
-
-    /// @brief Receive data from the internal queue
-    /// @return Number of bytes actually read, or -1 if empty
-    ssize_t recv(std::vector<uint8_t>& dst_buf) {
-        if (rx_queue.empty()) {
-            return -1;
-        } else {
-            dst_buf = rx_queue.front();
-            rx_queue.pop();
-            return dst_buf.size();
-        }
-    }
-
-    void set_tready(bool tready) {
-        tready_o = tready;
-    }
-
-    /// @brief Cycle tick
-    void update_input() {
-        tvalid_i = *(port.tvalid);
-        tkeep_i = *(port.tkeep);
-        tlast_i = *(port.tlast);
-        tuser_i = *(port.tuser);
-        
-        tdata_i.clear();
-        for (int i=0; i<DATA_WIDTH/8; i++) {
-             tdata_i.push_back(((char*)port.tdata)[i]);
-        }
-    }
-
-    void update_output() {
-        if (tvalid_i) {
-            for (int i=0;i<DATA_WIDTH/8;i++) {
-                if ((tkeep_i & ((uint64_t)1 << i)) != 0) {
-                    recv_buf.push_back(tdata_i[i]);
-                }
-            }
-            if (tlast_i) {
-                rx_queue.push(recv_buf);
-                log.info("[AXIS-SLV] RECV success !");
-                log.info("SIZE:", std::dec, recv_buf.size());
-                log.hexdump(recv_buf, 0);
-                recv_buf.clear();
-            }
-        }
-        *(port.tready) = tready_o;
     }
 };
 

@@ -17,7 +17,7 @@
 #ifndef AXI_MASTER_HPP
 #define AXI_MASTER_HPP
 
-#include "axi.hpp"
+#include "axi_ptr.hpp"
 #include "axi_common.hpp"
 #include "log.hpp"
 #include <queue>

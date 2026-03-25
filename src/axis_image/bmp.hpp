@@ -9,7 +9,7 @@
  * @details     BMP image read/write support for 24-bit and 32-bit uncompressed
  *              formats with bottom‑up pixel ordering.
  *
- * @ingroup axis_image_vip
+ * @ingroup axis_image
  *
  * Modification History:
  * Ver   Who  Date        Changes

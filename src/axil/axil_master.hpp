@@ -17,7 +17,7 @@
 #ifndef AXIL_MASTER_HPP
 #define AXIL_MASTER_HPP
 
-#include "axil.hpp"
+#include "axil_ptr.hpp"
 #include "log.hpp"
 #include <queue>
 

@@ -2,7 +2,7 @@
  * Copyright (C) 2025 WanderingKitsune. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
- * @file        axis.hpp
+ * @file        axis_prt.hpp
  * @brief       AXI4-Stream Interface Definitions
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
@@ -15,8 +15,8 @@
  * 1.0        2025/12/25  Initial release
  ******************************************************************************/
 
-#ifndef AXIS_HPP
-#define AXIS_HPP
+#ifndef AXIS_PRT_HPP
+#define AXIS_PRT_HPP
 #include <cstdint>
 #include <cstring>
 #include "sig.hpp"
