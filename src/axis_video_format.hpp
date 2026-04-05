@@ -24,11 +24,11 @@
 
 /**
  * @brief Axis pixel format types
- * 
+ *
  *  Pixel counter    max_ppc ...  pix1   pix0
  * AXIS_PIX_FMT_YUV:   V U Y ... V U Y  V U Y
  * AXIS_PIX_FMT_GBR:   R B G ... R B G  R B G
- * AXIS_PIX_FMT_YUYV:   V Y  ...  V Y    U Y 
+ * AXIS_PIX_FMT_YUYV:   V Y  ...  V Y    U Y
  */
 enum AxisPixFmt : uint32_t {
     AXIS_PIX_FMT_NONE = 0,

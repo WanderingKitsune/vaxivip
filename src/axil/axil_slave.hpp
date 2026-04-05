@@ -62,7 +62,7 @@ public:
         rd_addr_received = false;
         rd_data_sent = false;
         rd_data_reg = 0;
-        
+
         // Initialize inputs
         awvalid_i = false;
         awaddr_i = 0;
@@ -86,7 +86,7 @@ public:
     void update_input() {
         awvalid_i = *(port.awvalid);
         awaddr_i  = *(port.awaddr);
-        
+
         wvalid_i  = *(port.wvalid);
         wdata_i   = *(port.wdata);
         wstrb_i   = *(port.wstrb);
@@ -147,12 +147,12 @@ public:
         // 3. Drive Outputs
         *(port.awready) = !wr_addr_received;
         *(port.wready)  = !wr_data_received;
-        
+
         *(port.bvalid)  = wr_resp_sent;
         *(port.bresp)   = OKAY;
 
         *(port.arready) = !rd_addr_received;
-        
+
         *(port.rvalid)  = rd_data_sent;
         *(port.rdata)   = rd_data_reg;
         *(port.rresp)   = OKAY;

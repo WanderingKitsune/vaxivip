@@ -42,7 +42,7 @@ bool axil_check(const T& p) {
         (void*)p.araddr, (void*)p.arprot, (void*)p.arready, (void*)p.arvalid,
         (void*)p.rdata,  (void*)p.rready, (void*)p.rresp,   (void*)p.rvalid
     };
-    
+
     // Total signals: 19
     for (int i = 0; i < 19; ++i) {
         if (ptrs[i] == NULL) return false;

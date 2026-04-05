@@ -200,7 +200,7 @@ private:
 
     // Handshake flags
     bool aw_hs, w_hs, b_hs, ar_hs, r_hs;
-    
+
     // Burst tracking
     uint32_t w_beat_count;
     uint32_t r_beat_count;
@@ -249,7 +249,7 @@ private:
     void wdata_set(const std::vector<uint8_t>& data, uint32_t beat, bool last, uint32_t id) {
         size_t bytes_per_beat = DATA_WIDTH/8;
         size_t start_idx = beat * bytes_per_beat;
-        
+
         signal_set(port.wdata, data, start_idx, bytes_per_beat);
 
         // Calculate strobe based on valid data bytes in this beat
@@ -345,7 +345,7 @@ public:
             aw_hs = false;
             w_hs = false;
             b_hs = false;
-            
+
             write_trans& t = wr_q.front();
             waddr_set(t.addr, t.len, t.burst, t.id);
             wdata_set(t.data, 0, (t.len == 0), t.id);
@@ -383,12 +383,12 @@ public:
                         b_hs = true;
                         log.info("[AXI-MST] ", burst_to_string(t.burst), " WR success !");
 
-                        log.info("ADDR:0x", std::hex, t.addr, 
-                           "  LEN:", std::dec, t.len, 
+                        log.info("ADDR:0x", std::hex, t.addr,
+                           "  LEN:", std::dec, t.len,
                            "  SIZE:", t.data.size(),
                            "  ID:0x", std::hex, t.id);
                         log.hexdump(t.data, t.addr);
-                        
+
                         rresp_clr();
                         wr_q.pop(); // Transaction done
                         wr_active = false; // Reset active flag
@@ -404,7 +404,7 @@ public:
             r_hs = false;
             r_beat_count = 0;
             current_rd_burst.clear();
-            
+
             read_trans& t = rd_q.front();
             raddr_set(t.addr, t.len, t.burst, t.id);
         } else if (rd_active) {
@@ -440,8 +440,8 @@ public:
                             rd_data_q.push(current_rd_burst);
                             log.info("[AXI-MST] ", burst_to_string(t.burst), " RD success !");
 
-                            log.info("ADDR:0x", std::hex, t.addr, 
-                                      "  LEN:", std::dec, t.len, 
+                            log.info("ADDR:0x", std::hex, t.addr,
+                                      "  LEN:", std::dec, t.len,
                                       "  SIZE:", current_rd_burst.size(),
                                       "  ID:0x", std::hex, t.id);
                             log.hexdump(current_rd_burst, t.addr);

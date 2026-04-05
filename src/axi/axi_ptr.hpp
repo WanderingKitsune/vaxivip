@@ -55,7 +55,7 @@ bool axi_check(const T& p) {
         (void*)p.rdata,  (void*)p.rid,     (void*)p.rlast,
         (void*)p.rready, (void*)p.rresp,   (void*)p.rvalid
     };
-    
+
     // Total signals: 12 (AW) + 6 (W) + 4 (B) + 12 (AR) + 6 (R) = 40
     for (int i = 0; i < 40; ++i) {
         if (ptrs[i] == NULL) return false;

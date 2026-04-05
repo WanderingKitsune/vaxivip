@@ -120,7 +120,7 @@ axi_slave<256, 40, 16> slv(axi_sig);
 ```cpp
 while (!Verilated::gotFinish()) {
     // ... clock generation ...
-    
+
     if (top->clk) {
         // 1. Read input signals (sample at clock edge)
         mst.update_input();
@@ -323,7 +323,7 @@ axi_slave<256, 40, 16> slv(axi_sig);
 ```cpp
 while (!Verilated::gotFinish()) {
     // ... 时钟生成 ...
-    
+
     if (top->clk) {
         // 1. 读取输入信号（在时钟沿采样）
         mst.update_input();

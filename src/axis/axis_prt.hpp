@@ -29,7 +29,7 @@ bool axis_check(const T& p) {
         (void*)p.tid,   (void*)p.tdest, (void*)p.tuser,
         (void*)p.tlast, (void*)p.tvalid,(void*)p.tready
     };
-    
+
     for (int i = 0; i < 9; ++i) {
         if (ptrs[i] == NULL) return false;
         for (int j = i + 1; j < 9; ++j) {

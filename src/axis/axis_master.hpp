@@ -45,7 +45,7 @@ public:
     uint32_t tx_dest;                       ///< Current transaction DEST
     uint32_t tx_user;                       ///< Current transaction USER
     bool tx_sof;                            ///< Current transaction SOF flag
-    
+
     // Registered Input Signals
     bool tready_i;
 
@@ -93,7 +93,7 @@ public:
             if (tx_buf.empty() && !tx_queue.empty()) {
                 tx_buf = tx_queue.front();
                 tx_queue.pop();
-                
+
                 if (!tx_id_queue.empty()) {
                     tx_id = tx_id_queue.front();
                     tx_id_queue.pop();

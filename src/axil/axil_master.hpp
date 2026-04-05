@@ -220,7 +220,7 @@ public:
             wr_active = true;
             uint64_t addr = wr_addr_q.front(); wr_addr_q.pop();
             uint64_t data = wr_data_q.front(); wr_data_q.pop();
-            
+
             current_wr_addr = addr;
             current_wr_data = data;
 

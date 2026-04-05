@@ -176,13 +176,13 @@ int main(int argc, char** argv) {
                 // Scalar writes converted to vector INCR writes
                 std::vector<uint8_t> data1 = {0x34, 0x12, 0xCD, 0xAB}; // Little endian 0xABCD1234
                 axi_mst.write_incr(0x100, data1);
-                
+
                 std::vector<uint8_t> data2 = {0x12, 0x12, 0x12, 0x12};
                 axi_mst.write_incr(0x200, data2, 0x5);
-                
+
                 std::vector<uint8_t> data3 = {0x00, 0x00, 0x00, 0x10};
                 axi_mst.write_incr(0x300, data3);
-                
+
                 // Burst Write (INCR)
                 std::vector<uint8_t> burst_data;
                 for(int i=0; i<100; i++) burst_data.push_back(i);
@@ -209,14 +209,14 @@ int main(int argc, char** argv) {
                 axi_mst.read_incr(0x100);
                 axi_mst.read_incr(0x200, 32, 0x5);
                 axi_mst.read_incr(0x300);
-                
+
                 // Burst Read
                 // Test 100 bytes (non-aligned size)
                 // 100 bytes -> 4 beats (128 bytes). Master should truncate to 100.
-                axi_mst.read_incr(0x400, 100); 
+                axi_mst.read_incr(0x400, 100);
 
                 // WRAP Read
-                // Request 120 bytes. 
+                // Request 120 bytes.
                 // Physical xfer: 128 bytes (4 beats). Master will truncate to 120.
                 axi_mst.read_wrap(0x700, 128);
             }

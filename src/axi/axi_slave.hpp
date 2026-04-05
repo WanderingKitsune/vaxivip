@@ -34,7 +34,7 @@ public:
     axi_slave_ptr<DATA_WIDTH, ADDR_WIDTH, ID_WIDTH> port;
 
     std::map<uint64_t, uint8_t> mem; // Byte-addressable memory
-    
+
     // State variables
     bool aw_latch;
     bool w_active;
@@ -162,9 +162,9 @@ public:
 
         *(port.arready) = false;
         *(port.rvalid)  = false;
-        
+
         signal_clr(port.rdata);
-        
+
         *(port.rresp)   = 0;
         *(port.rlast)   = false;
         *(port.rid)     = 0;
@@ -231,7 +231,7 @@ public:
             w_active = false;
             *(port.wready) = false;
             w_done_pending = false;
-            
+
             // Trigger B Phase
             *(port.bvalid) = true;
             *(port.bresp) = 0; // OKAY
@@ -248,7 +248,7 @@ public:
                 if (wvalid_i) {
                     size_t bytes_per_beat = DATA_WIDTH/8;
                     uint64_t base_addr = get_addr(aw_addr, w_beat_count, aw_len, aw_burst, bytes_per_beat);
-                    
+
                     std::vector<uint8_t> beat_data;
                     signal_get(&wdata_i, beat_data, bytes_per_beat);
 
@@ -264,10 +264,10 @@ public:
                             mem[base_addr + i] = beat_data[i];
                         }
                     }
-                    
+
                     w_beat_count++;
                     w_wait_next = true;
-                    
+
                     if (wlast_i || w_beat_count > aw_len) { // awlen is 0-based
                         w_done_pending = true;
                         // Keep wready=1 for this cycle so Master sees it
@@ -284,9 +284,9 @@ public:
             *(port.bvalid) = false;
             aw_latch = false; // Ready for next transaction
             log.info("[AXI-SLV] ", burst_to_string(aw_burst), " WR success !");
-            
-            log.info("ADDR:0x", std::hex, aw_addr, 
-               "  LEN:", std::dec, aw_len, 
+
+            log.info("ADDR:0x", std::hex, aw_addr,
+               "  LEN:", std::dec, aw_len,
                "  SIZE:", w_data_accum.size(),
                "  ID:0x", std::hex, aw_id);
             log.hexdump(w_data_accum, aw_addr);
@@ -330,8 +330,8 @@ public:
                 ar_latch = false;
 
                 log.info("[AXI-SLV] ", burst_to_string(ar_burst), " RD success !");
-                log.info("ADDR:0x", std::hex, ar_addr, 
-                   "  LEN:", std::dec, ar_len, 
+                log.info("ADDR:0x", std::hex, ar_addr,
+                   "  LEN:", std::dec, ar_len,
                    "  SIZE:", r_data_accum.size(),
                    "  ID:0x", std::hex, ar_id);
                 log.hexdump(r_data_accum, ar_addr);
@@ -339,10 +339,10 @@ public:
             }
 
             uint64_t current_addr = get_addr(ar_addr, r_beat_count, ar_len, ar_burst, bytes_per_beat);
-            
+
             std::vector<uint8_t> beat_data;
             beat_data.reserve(bytes_per_beat);
-            
+
             for (size_t i=0; i<bytes_per_beat; i++) {
                 if (mem.find(current_addr + i) != mem.end()) {
                     beat_data.push_back(mem[current_addr + i]);
@@ -350,13 +350,13 @@ public:
                     beat_data.push_back(0);
                 }
             }
-            
+
             signal_set(port.rdata, beat_data, 0, bytes_per_beat);
-            
+
             *(port.rvalid) = true;
             *(port.rresp) = 0; // OKAY
             *(port.rid) = ar_id;
-            
+
             bool last = (r_beat_count == ar_len);
             *(port.rlast) = last;
         }

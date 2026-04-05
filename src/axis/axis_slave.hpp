@@ -84,7 +84,7 @@ public:
         tkeep_i = *(port.tkeep);
         tlast_i = *(port.tlast);
         tuser_i = *(port.tuser);
-        
+
         tdata_i.clear();
         for (int i=0; i<DATA_WIDTH/8; i++) {
              tdata_i.push_back(((char*)port.tdata)[i]);
