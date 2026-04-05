@@ -2,12 +2,10 @@
 #define VIDEO_INFO_HPP
 
 #include "image_info.hpp"
-#include <cstdint>
 
-class VideoInfo {
+class VideoInfo : public ImageInfo {
 public:
-    ImageInfo image_info;
-    uint32_t frame_total;
+    uint32_t frame_total = 0;
 };
 
 #endif

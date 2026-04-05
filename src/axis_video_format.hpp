@@ -1,3 +1,22 @@
+/******************************************************************************
+ * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * SPDX-License-Identifier: MIT
+ *
+ * @file        axis_video_format.hpp
+ * @brief       AXI Stream Video Format Definitions
+ * @see         https://github.com/WanderingKitsune/vaxivip
+ *
+ * @details     Defines pixel formats, bits per channel, pixels per cycle,
+ *              and validation macros for AXI4-Stream video interfaces.
+ *
+ * @ingroup axis_video
+ *
+ * Modification History:
+ * Ver   Who  Date        Changes
+ * ----  ---- ----------  -----------------------------------------------------
+ * 1.0        2025/12/30  Initial release
+ ******************************************************************************/
+
 #ifndef AXIS_VIDEO_FORMAT_HPP
 #define AXIS_VIDEO_FORMAT_HPP
 
@@ -43,5 +62,7 @@ enum PpcFmt : uint32_t {
  */
 #define static_assert_bpc(bpc) static_assert((bpc) == BPC_FMT_8 || (bpc) == BPC_FMT_10 || (bpc) == BPC_FMT_12, "BPC must be 8, 10, or 12")
 #define static_assert_ppc(ppc) static_assert((ppc) == PPC_FMT_1 || (ppc) == PPC_FMT_2 || (ppc) == PPC_FMT_4, "PPC must be 1, 2, or 4")
+
+/** @} */ // end of group axis_video
 
 #endif

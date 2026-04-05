@@ -17,6 +17,7 @@
 | **`axil`** (`src/axil/`) | AXI4-Lite | Simple register access | Peripheral register access verification |
 | **`axis`** (`src/axis/`) | AXI4-Stream | Stream data transfer | Video streaming, network packet transmission |
 | **`axis_image`** (`src/axis_image/`) | AXI4-Stream | BMP image streaming with configurable BPC/PPC (Xilinx AXI4-Stream Video compliant) | Image processing IP verification (BMP I/O) |
+| **`axis_video`** (`src/axis_video/`) | AXI4-Stream | YUV planar video frame streaming with configurable BPC/PPC | Video processing IP verification (YUV I/O) |
 
 ## 🚀 Quick Start
 
@@ -63,14 +64,16 @@ make clean
 │   ├── axi/            # AXI4: axi_ptr.hpp, axi.hpp, axi_master.hpp, axi_slave.hpp, axi_common.hpp
 │   ├── axil/           # AXI4-Lite: axil_ptr.hpp, axil.hpp, axil_master.hpp, axil_slave.hpp
 │   ├── axis/           # AXI4-Stream: axis_prt.hpp, axis.hpp, axis_master.hpp, axis_slave.hpp
-│   ├── axis_image/     # AXI4-Stream image: axis_image_vip.hpp, axis_image_*.hpp, bmp.hpp
+│   ├── axis_image/     # AXI4-Stream image: axis_image.hpp, axis_image_*.hpp, bmp.hpp
+│   ├── axis_video/     # AXI4-Stream video: axis_video.hpp, axis_video_*.hpp, frame_mem.hpp, pix_fmt.hpp
 │   ├── log.hpp         # Shared logging
 │   └── sig.hpp         # Shared signal helpers
 ├── tb/                 # Testbenches and examples
 │   ├── axi/            # AXI4 tests
 │   ├── axil/           # AXI4-Lite tests
 │   ├── axis/           # AXI4-Stream tests
-│   └── axis_image/     # AXI4-Stream image tests
+│   ├── axis_image/     # AXI4-Stream image tests
+│   └── axis_video/     # AXI4-Stream video tests
 └── README.md
 ```
 
@@ -84,7 +87,8 @@ Add each relevant directory under `src/` to your compiler include path (e.g. `-I
 #include "axil.hpp"           // AXI4-Lite VIP
 #include "axis_prt.hpp"       // AXI4-Stream signal structs (optional)
 #include "axis.hpp"           // AXI4-Stream VIP
-#include "axis_image_vip.hpp" // AXI4-Stream image VIP
+#include "axis_image.hpp" // AXI4-Stream image VIP
+#include "axis_video.hpp" // AXI4-Stream video VIP
 ```
 
 ### 2. Bind Signals
@@ -139,7 +143,7 @@ while (!Verilated::gotFinish()) {
 }
 ```
 
-### 5. AXI4-Stream Image VIP Special Features
+### 5. AXI4-Stream Image VIP Features
 
 **Standard Compliance**: The `axis_image` module follows the **Xilinx AXI4-Stream Video IP and System Design** standard, ensuring compatibility with Xilinx/AMD video processing IP cores. For detailed specifications, refer to the [Xilinx AXI Video IP Product Guide](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip).
 
@@ -148,8 +152,11 @@ while (!Verilated::gotFinish()) {
 // Parameters: <BPC (bits per channel), PPC (pixels per beat)>
 axis_image_master<8, 4> img_mst(s_mst_port);
 
+// ImageInfo to store width/height
+ImageInfo info;
+
 // Read BMP and start sending (non-blocking)
-img_mst.send_frame("test.bmp");
+img_mst.send_frame("test.bmp", &info);
 
 // In simulation loop
 img_mst.update_input();
@@ -166,18 +173,16 @@ if (img_mst.eof()) {
 ```cpp
 axis_image_slave<8, 4> img_slv{m_slv_port};
 
-// Prepare to receive image with known resolution
-img_slv.receive_image(1920, 1080);
+// Prepare to receive image (info contains width/height from master)
+img_slv.recv_frame(&info, "output.bmp");
 
 // In simulation loop
 img_slv.update_input();
 top->eval();
 img_slv.update_output();
 
-// Save received image
-if (img_slv.eof()) {
-    img_slv.save_bmp("output.bmp");
-}
+// Image is automatically saved when reception completes
+// Can also manually save with: img_slv.write_file("output.bmp");
 ```
 
 ## 🔧 Running Tests
@@ -217,6 +222,7 @@ Copyright (c) 2025 WanderingKitsune
 | **`axil`**（`src/axil/`） | AXI4-Lite | 简单寄存器访问 | 外设寄存器访问验证 |
 | **`axis`**（`src/axis/`） | AXI4-Stream | 流数据传输 | 视频流、网络包传输 |
 | **`axis_image`**（`src/axis_image/`） | AXI4-Stream | BMP图像流，可配置BPC/PPC (遵循Xilinx AXI4-Stream Video标准) | 图像处理IP验证（BMP输入/输出） |
+| **`axis_video`**（`src/axis_video/`） | AXI4-Stream | YUV planar视频帧流，可配置BPC/PPC | 视频处理IP验证（YUV输入/输出） |
 
 ## 🚀 快速开始
 
@@ -261,14 +267,16 @@ make clean
 │   ├── axi/            # AXI4：axi_ptr.hpp, axi.hpp, axi_master.hpp, axi_slave.hpp, axi_common.hpp
 │   ├── axil/           # AXI4-Lite：axil_ptr.hpp, axil.hpp, axil_master.hpp, axil_slave.hpp
 │   ├── axis/           # AXI4-Stream：axis_prt.hpp, axis.hpp, axis_master.hpp, axis_slave.hpp
-│   ├── axis_image/     # AXI4-Stream 图像：axis_image_vip.hpp, axis_image_*.hpp, bmp.hpp
+│   ├── axis_image/     # AXI4-Stream 图像：axis_image.hpp, axis_image_*.hpp, bmp.hpp
+│   ├── axis_video/     # AXI4-Stream 视频：axis_video.hpp, axis_video_*.hpp, frame_mem.hpp, pix_fmt.hpp
 │   ├── log.hpp         # 公共日志
 │   └── sig.hpp         # 公共信号辅助
 ├── tb/                 # 测试用例和示例
 │   ├── axi/            # AXI4 测试
 │   ├── axil/           # AXI4-Lite 测试
 │   ├── axis/           # AXI4-Stream 测试
-│   └── axis_image/     # AXI4-Stream 图像测试
+│   ├── axis_image/     # AXI4-Stream 图像测试
+│   └── axis_video/     # AXI4-Stream 视频测试
 └── README.md
 ```
 
@@ -282,7 +290,8 @@ make clean
 #include "axil.hpp"           // AXI4-Lite VIP
 #include "axis_prt.hpp"       // AXI4-Stream 信号结构（可省略）
 #include "axis.hpp"           // AXI4-Stream VIP
-#include "axis_image_vip.hpp" // AXI4-Stream 图像 VIP
+#include "axis_image.hpp" // AXI4-Stream 图像 VIP
+#include "axis_video.hpp" // AXI4-Stream 视频 VIP
 ```
 
 ### 2. 绑定信号
@@ -337,7 +346,7 @@ while (!Verilated::gotFinish()) {
 }
 ```
 
-### 5. AXI4-Stream 图像VIP特殊功能
+### 5. AXI4-Stream 图像VIP功能
 
 **标准遵循**：`axis_image` 模块遵循 **Xilinx AXI4-Stream Video IP and System Design** 标准，确保与 Xilinx/AMD 视频处理 IP 核的兼容性。详细规范请参考 [Xilinx AXI Video IP 产品指南](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip)。
 
@@ -346,8 +355,11 @@ while (!Verilated::gotFinish()) {
 // 参数: <BPC (每通道位数), PPC (每拍像素数)>
 axis_image_master<8, 4> img_mst(s_mst_port);
 
+// ImageInfo用于存储宽度/高度信息
+ImageInfo info;
+
 // 读取BMP并开始发送（非阻塞）
-img_mst.send_frame("test.bmp");
+img_mst.send_frame("test.bmp", &info);
 
 // 在仿真循环中
 img_mst.update_input();
@@ -364,23 +376,22 @@ if (img_mst.eof()) {
 ```cpp
 axis_image_slave<8, 4> img_slv{m_slv_port};
 
-// 准备接收已知分辨率的图像
-img_slv.receive_image(1920, 1080);
+// 准备接收图像（info包含来自master的宽度/高度信息）
+img_slv.recv_frame(&info, "output.bmp");
 
 // 在仿真循环中
 img_slv.update_input();
 top->eval();
 img_slv.update_output();
 
-// 保存接收到的图像
-if (img_slv.eof()) {
-    img_slv.save_bmp("output.bmp");
-}
+// 接收完成后图像自动保存
+// 也可以手动保存：img_slv.write_file("output.bmp");
 ```
 
 ## 🔧 运行测试
 
 ### 环境搭建
+
 确保已安装：
 - Verilator (v5.038+)
 - GTKWave (可选，用于查看波形)
