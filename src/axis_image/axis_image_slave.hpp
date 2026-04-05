@@ -23,7 +23,7 @@
 #include "axis_slave.hpp"
 #include "bmp.hpp"
 #include "log.hpp"
-#include "../axis_video_format.hpp"
+#include "axis_video_format.hpp"
 #include <string>
 #include <queue>
 
@@ -42,23 +42,17 @@ public:
     static constexpr uint32_t TKEEP_WIDTH = DATA_WIDTH / 8;
     static constexpr uint32_t USER_WIDTH = 1;
 
-    static_assert(BPC == BPC_FMT_8 || BPC == BPC_FMT_10 || BPC == BPC_FMT_12, "BPC must be 8, 10, or 12");
-    static_assert(PPC == PPC_FMT_1 || PPC == PPC_FMT_2 || PPC == PPC_FMT_4, "PPC must be 1, 2, or 4");
+    static_assert_bpc(BPC);
+    static_assert_ppc(PPC);
 
-    /// @brief Logger instance
-    Log log;
-    /// @brief Underlying AXI4-Stream slave BFM
     axis_slave<DATA_WIDTH, 1, 1, USER_WIDTH> axis_slv;
-    /// @brief Bitmap image buffer for received pixels
+
+    Log log;
     Bitmap bmp;
-    /// @brief Image information pointer (points to bmp.image_info)
     ImageInfo* image_info;
-    /// @brief Output filename for saving BMP
     std::string filename;
-    /// @brief Current pixel index (0‑based, row‑major)
     uint32_t pixel_idx;
-    /// @brief Whether the image is being received
-    bool receiving;
+    bool busy;
 
     /// @brief Constructor
     /// @param port AXI4-Stream slave interface pointer
@@ -67,7 +61,7 @@ public:
         axis_slv.log.quiet = true;
         image_info = &bmp.image_info;
         pixel_idx = 0;
-        receiving = false;
+        busy = false;
     }
 
     /// @brief Prepare to receive an image
@@ -77,7 +71,7 @@ public:
         image_info = info;
         filename = fname;
         pixel_idx = 0;
-        receiving = true;
+        busy = true;
         bmp.create(info->width, info->height);
         log.info("[IMAGE-SLV] Ready to receive image: ",
                  info->width, "x", info->height);
@@ -85,14 +79,14 @@ public:
 
     /// @brief Check if image reception is in progress
     /// @return true if image is currently being received, false otherwise
-    bool is_receiving() const {
-        return receiving;
+    bool is_busy() const {
+        return busy;
     }
 
     /// @brief Check if end-of-frame reached (reception completed)
-    /// @return true if reception is complete, false if still receiving
+    /// @return true if reception is complete, false if still busy
     bool eof() const {
-        return !receiving;
+        return !busy;
     }
 
     /// @brief Check if receive queue is empty
@@ -115,7 +109,7 @@ public:
     /// @brief Drive outputs to DUT and process received data
     void update_output() {
         axis_slv.update_output();
-        if (!receiving) return;
+        if (!busy) return;
 
         const uint32_t total_pixels = image_info->width * image_info->height;
         std::vector<uint8_t> data;
@@ -135,7 +129,7 @@ public:
 
         const uint32_t line_b = image_info->width * bpp;
         if (line_b == 0) {
-            receiving = false;
+            busy = false;
             return;
         }
 
@@ -161,7 +155,7 @@ public:
 
         if (!pkt_ok) {
             log.error("[IMAGE-SLV] frame recv aborted (preset ", image_info->width, "x", image_info->height, ")");
-            receiving = false;
+            busy = false;
             return;
         }
 
@@ -186,7 +180,7 @@ public:
         }
 
         if (pixel_idx >= total_pixels) {
-            receiving = false;
+            busy = false;
             bmp.write(filename);
             log.info("[IMAGE-SLV] Image receive complete. Resolution=",
                      image_info->width, "x", image_info->height);

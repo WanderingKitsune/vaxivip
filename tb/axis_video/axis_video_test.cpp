@@ -2,34 +2,34 @@
  * Copyright (C) 2025 WanderingKitsune. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
- * @file        axis_image_test.cpp
- * @brief       AXI4-Stream Image Testbench (C++)
+ * @file        axis_video_test.cpp
+ * @brief       AXI4-Stream Video Testbench (C++)
  * @see         https://github.com/WanderingKitsune/vaxivip
  *
- * @details     Verilator C++ TB: one image send/recv, save BMP. VIP: `src/axis_image/axis_image_vip.hpp`
- *              (stream structs from `src/axis/` via that header; include dirs from `tb/axis_image/Makefile`).
+ * @details     Verilator C++ TB: video send/recv, save YUV. VIP: `src/axis_video/axis_video.hpp`
+ *              (stream structs from `src/axis/` via that header; include dirs from `tb/axis_video/Makefile`).
  *
  * Modification History:
  * Ver   Who  Date        Changes
  * ----  ---- ----------  -----------------------------------------------------
- * 1.0        2025/12/30  Initial release
+ * 1.0        2026/04/05  Initial release
  ******************************************************************************/
 
-#include "Vaxis_image_test.h"
+#include "Vaxis_video_test.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
-#include "axis_image.hpp"
+#include "axis_video.hpp"
 #include "axis_video_format.hpp"
 
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
     Verilated::traceEverOn(true);
 
-    constexpr uint32_t BPC        = 8;
-    constexpr uint32_t PPC        = 4;
+    constexpr uint32_t BPC = 12;
+    constexpr uint32_t PPC = 4;
     constexpr uint32_t DATA_WIDTH = 3 * PPC * BPC;
 
-    Vaxis_image_test* top = new Vaxis_image_test;
+    Vaxis_video_test* top = new Vaxis_video_test;
     VerilatedVcdC*    tfp = new VerilatedVcdC;
 
     axis_ptr<DATA_WIDTH, 1, 1, 1> s_axis_ptr;
@@ -58,8 +58,8 @@ int main(int argc, char** argv) {
     axis_master_ptr<DATA_WIDTH, 1, 1, 1> s_mst_port(s_axis_ptr);
     axis_slave_ptr<DATA_WIDTH, 1, 1, 1> m_slv_port(m_axis_ptr);
 
-    axis_image_master<BPC, PPC> img_mst{s_mst_port};
-    axis_image_slave<BPC, PPC>  img_slv{m_slv_port};
+    axis_video_master<BPC, PPC> video_mst{s_mst_port};
+    axis_video_slave<BPC, PPC>  video_slv{m_slv_port};
 
     top->trace(tfp, 100);
     tfp->open("waveform.vcd");
@@ -67,16 +67,22 @@ int main(int argc, char** argv) {
     top->axis_clk = 0;
     top->axis_rst = 1;
 
-    std::string input_bmp = "in.bmp";
-    std::string output_bmp = "out.bmp";
+    std::string input_yuv = "test_320x240_yuv444p_2frame.yuv";
+    std::string output_yuv = "out.yuv";
+    std::remove(output_yuv.c_str());
 
-    ImageInfo info;
+    FrameInfo info;
+    info.pix_fmt = PIX_FMT_YUV444P;
+    info.width = 320;
+    info.height = 240;
+    info.color_depth = COLOR_DEPTH_8;
+    info.frame_total = 1;
 
-    std::cout << "Sending image: " << input_bmp << std::endl;
+    std::cout << "Sending video: " << input_yuv << std::endl;
 
     uint64_t tick_count = 0;
     uint64_t clock_count = 0;
-    const uint64_t max_ticks = 500000;
+    const uint64_t max_ticks = 3 * uint64_t(info.width) * uint64_t(info.height) * uint64_t(info.frame_total) / uint64_t(PPC); // Arbitrary large number of ticks
 
     bool started = false;
 
@@ -90,22 +96,24 @@ int main(int argc, char** argv) {
 
         if (top->axis_clk) {
             clock_count++;
+
             if (!started && clock_count > 20) {
                 started = true;
-                img_mst.send_frame(input_bmp, &info);
-                img_slv.recv_frame(&info, output_bmp);
+                video_mst.send_frames(input_yuv, info, 0, 1);
+                video_slv.recv_frames(output_yuv, info, false);
             }
-            img_mst.update_input();
-            img_slv.update_input();
+
+            video_mst.update_input();
+            video_slv.update_input();
         }
 
         top->eval();
 
         if (top->axis_clk) {
-            img_mst.update_output();
-            img_slv.update_output();
+            video_mst.update_output();
+            video_slv.update_output();
 
-            if (started && img_mst.eof() && img_slv.eof()) break;
+            if (started && video_mst.done && video_slv.done) break;
         }
 
         top->eval();

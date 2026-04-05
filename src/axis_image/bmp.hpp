@@ -26,7 +26,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-#include "../image_info.hpp"
+#include "image_info.hpp"
 
 /**
  * @brief BMP image container with read/write capabilities

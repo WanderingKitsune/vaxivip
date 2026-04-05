@@ -24,7 +24,7 @@
 #include "bmp.hpp"
 #include "image_info.hpp"
 #include "log.hpp"
-#include "../axis_video_format.hpp"
+#include "axis_video_format.hpp"
 #include <string>
 #include <queue>
 #include <cstring>
@@ -44,21 +44,14 @@ public:
     static constexpr uint32_t TKEEP_WIDTH = DATA_WIDTH / 8;
     static constexpr uint32_t USER_WIDTH = 1;
 
-    static_assert(BPC == BPC_FMT_8 || BPC == BPC_FMT_10 || BPC == BPC_FMT_12, "BPC must be 8, 10, or 12");
-    static_assert(PPC == PPC_FMT_1 || PPC == PPC_FMT_2 || PPC == PPC_FMT_4, "PPC must be 1, 2, or 4");
+    static_assert_bpc(BPC);
+    static_assert_ppc(PPC);
 
-    /// @brief Underlying AXI4-Stream master BFM
     axis_master<DATA_WIDTH, 1, 1, USER_WIDTH> axis_mst;
-
-    /// @brief Logger instance
     Log log;
-
-    /// @brief Bitmap image buffer for loaded pixels
     Bitmap bmp;
     ImageInfo* image_info;
     uint32_t pixel_idx = 0;
-
-    /// @brief Whether the image is being sent
     bool sending = false;
 
     /**
