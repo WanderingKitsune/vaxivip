@@ -55,4 +55,4 @@ lint: $(TOP)
 
 .PHONY: clean
 clean:
-	rm -rf .stamp.verilate ./obj_dir waveform.vcd
+	rm -rf .stamp.verilate ./obj_dir waveform.vcd out.bmp

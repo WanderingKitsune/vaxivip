@@ -26,6 +26,7 @@
 
 #include "axis.hpp"
 #include "bmp.hpp"
+#include "../axis_video_format.hpp"
 #include "axis_image_master.hpp"
 #include "axis_image_slave.hpp"
 

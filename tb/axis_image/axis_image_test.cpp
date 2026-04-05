@@ -19,6 +19,7 @@
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 #include "axis_image.hpp"
+#include "axis_video_format.hpp"
 
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
@@ -66,16 +67,12 @@ int main(int argc, char** argv) {
     top->axis_clk = 0;
     top->axis_rst = 1;
 
-    std::string input_bmp = "test_images/in.bmp";
-    std::string output_bmp = "test_images/out.bmp";
+    std::string input_bmp = "in.bmp";
+    std::string output_bmp = "out.bmp";
 
-    Bitmap bmp;
-    if (!bmp.read(input_bmp)) {
-        std::cerr << "Failed to read input BMP: " << input_bmp << std::endl;
-        return -1;
-    }
+    ImageInfo info;
 
-    std::cout << "Loaded image: " << bmp.width << "x" << bmp.height << std::endl;
+    std::cout << "Sending image: " << input_bmp << std::endl;
 
     uint64_t tick_count = 0;
     uint64_t clock_count = 0;
@@ -96,8 +93,8 @@ int main(int argc, char** argv) {
 
             if (!started && clock_count > 20) {
                 started = true;
-                img_mst.send_frame(input_bmp);
-                img_slv.recv_frame(bmp.width, bmp.height);
+                img_mst.send_frame(input_bmp, &info);
+                img_slv.recv_frame(&info, output_bmp);
             }
 
             // Follow Verilator TB convention: update_input -> eval -> update_output on posedge
@@ -119,12 +116,6 @@ int main(int argc, char** argv) {
     }
 
     tfp->close();
-
-    if (img_slv.save_frame(output_bmp)) {
-        std::cout << "Saved output BMP: " << output_bmp << std::endl;
-    } else {
-        std::cerr << "Failed to save output BMP" << std::endl;
-    }
 
     delete tfp;
     delete top;

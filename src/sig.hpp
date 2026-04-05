@@ -21,13 +21,13 @@
 
 #include <verilated.h>
 #include <condition_variable>
-    
+
 #define sig_t(msb, lsb) \
     typename std::conditional<((msb+1)-(lsb)) <= 8,  CData, \
     typename std::conditional<((msb+1)-(lsb)) <= 16, SData, \
     typename std::conditional<((msb+1)-(lsb)) <= 32, IData, \
     typename std::conditional<((msb+1)-(lsb)) <= 64, QData, \
-    VlWide<((msb+1)-(lsb))/32+((msb+1)-(lsb))%32>>::type>::type>::type>::type
+    VlWide<(((msb+1)-(lsb))+31)/32>>::type>::type>::type>::type
 
 #define sig_io(name, msb, lsb) sig_t(msb,lsb) name
 #define sig_in(name, msb, lsb) const sig_t(msb, lsb) name

@@ -23,6 +23,7 @@
 #include "axis_slave.hpp"
 #include "bmp.hpp"
 #include "log.hpp"
+#include "../axis_video_format.hpp"
 #include <string>
 #include <queue>
 
@@ -37,12 +38,12 @@ template <
 >
 class axis_image_slave {
 public:
-    /// @brief AXI4-Stream data width in bits (RGB888, PPC pixels per beat)
     static constexpr uint32_t DATA_WIDTH = 3 * PPC * BPC;
-    /// @brief AXI4-Stream TKEEP width in bytes
     static constexpr uint32_t TKEEP_WIDTH = DATA_WIDTH / 8;
-    /// @brief AXI4-Stream USER width in bits (1 bit for SOF)
     static constexpr uint32_t USER_WIDTH = 1;
+
+    static_assert(BPC == BPC_FMT_8 || BPC == BPC_FMT_10 || BPC == BPC_FMT_12, "BPC must be 8, 10, or 12");
+    static_assert(PPC == PPC_FMT_1 || PPC == PPC_FMT_2 || PPC == PPC_FMT_4, "PPC must be 1, 2, or 4");
 
     /// @brief Logger instance
     Log log;
@@ -50,10 +51,10 @@ public:
     axis_slave<DATA_WIDTH, 1, 1, USER_WIDTH> axis_slv;
     /// @brief Bitmap image buffer for received pixels
     Bitmap bmp;
-    /// @brief Image width in pixels (preset before receiving)
-    uint32_t img_width;
-    /// @brief Image height in pixels (preset before receiving)
-    uint32_t img_height;
+    /// @brief Image information pointer (points to bmp.image_info)
+    ImageInfo* image_info;
+    /// @brief Output filename for saving BMP
+    std::string filename;
     /// @brief Current pixel index (0‑based, row‑major)
     uint32_t pixel_idx;
     /// @brief Whether the image is being received
@@ -62,32 +63,24 @@ public:
     /// @brief Constructor
     /// @param port AXI4-Stream slave interface pointer
     axis_image_slave(const axis_slave_ptr<DATA_WIDTH, 1, 1, USER_WIDTH>& port)
-        : axis_slv(port),
-          img_width(0),
-          img_height(0),
-          pixel_idx(0),
-          receiving(false) {
+        : axis_slv(port) {
         axis_slv.log.quiet = true;
+        image_info = &bmp.image_info;
+        pixel_idx = 0;
+        receiving = false;
     }
 
-    /// @brief Prepare to receive an image of specified dimensions
-    /// @param width Image width in pixels
-    /// @param height Image height in pixels
-    void receive_image(uint32_t width, uint32_t height) {
-        img_width  = width;
-        img_height = height;
-        pixel_idx  = 0;
-        receiving  = true;
-        bmp.create(width, height);
+    /// @brief Prepare to receive an image
+    /// @param info Image information pointer
+    /// @param fname Output filename for saving BMP
+    void recv_frame(ImageInfo* info, const std::string& fname) {
+        image_info = info;
+        filename = fname;
+        pixel_idx = 0;
+        receiving = true;
+        bmp.create(info->width, info->height);
         log.info("[IMAGE-SLV] Ready to receive image: ",
-                 width, "x", height);
-    }
-
-    /// @brief Prepare to receive an image of specified dimensions (alias of receive_image)
-    /// @param width Image width in pixels
-    /// @param height Image height in pixels
-    void recv_frame(uint32_t width, uint32_t height) {
-        receive_image(width, height);
+                 info->width, "x", info->height);
     }
 
     /// @brief Check if image reception is in progress
@@ -124,7 +117,7 @@ public:
         axis_slv.update_output();
         if (!receiving) return;
 
-        const uint32_t total_pixels = img_width * img_height;
+        const uint32_t total_pixels = image_info->width * image_info->height;
         std::vector<uint8_t> data;
         ssize_t size = axis_slv.recv(data);
         if (size <= 0) return;
@@ -140,34 +133,34 @@ public:
             pkt_ok = false;
         }
 
-        const uint32_t line_b = img_width * bpp;
+        const uint32_t line_b = image_info->width * bpp;
         if (line_b == 0) {
             receiving = false;
             return;
         }
 
-        if ((pixel_idx % img_width) != 0) {
-            log.error("[IMAGE-SLV] packet not at row boundary (preset W=", img_width,
+        if ((pixel_idx % image_info->width) != 0) {
+            log.error("[IMAGE-SLV] packet not at row boundary (preset W=", image_info->width,
                       " pixel_idx=", pixel_idx, ")");
             pkt_ok = false;
         } else {
-            const uint32_t rows_left = (total_pixels - pixel_idx) / img_width;
+            const uint32_t rows_left = (total_pixels - pixel_idx) / image_info->width;
             if (sz % line_b != 0) {
                 log.error("[IMAGE-SLV] line width mismatch preset: bytes=", sz,
-                          " expect multiple of ", line_b, " (W=", img_width, " bpp=", bpp, ")");
+                          " expect multiple of ", line_b, " (W=", image_info->width, " bpp=", bpp, ")");
                 pkt_ok = false;
             } else {
                 const uint32_t nlines = sz / line_b;
                 if (nlines > rows_left) {
                     log.error("[IMAGE-SLV] row count exceeds preset: packet_lines=", nlines,
-                              " rows_left=", rows_left, " (preset H=", img_height, ")");
+                              " rows_left=", rows_left, " (preset H=", image_info->height, ")");
                     pkt_ok = false;
                 }
             }
         }
 
         if (!pkt_ok) {
-            log.error("[IMAGE-SLV] frame recv aborted (preset ", img_width, "x", img_height, ")");
+            log.error("[IMAGE-SLV] frame recv aborted (preset ", image_info->width, "x", image_info->height, ")");
             receiving = false;
             return;
         }
@@ -175,8 +168,8 @@ public:
         const uint32_t p0 = pixel_idx;
         for (uint32_t off = 0; off + bpp - 1 < static_cast<uint32_t>(size) && pixel_idx < total_pixels;
              off += bpp) {
-            uint32_t x = pixel_idx % img_width;
-            uint32_t y = pixel_idx / img_width;
+            uint32_t x = pixel_idx % image_info->width;
+            uint32_t y = pixel_idx / image_info->width;
             uint8_t  r = data[off + 0];
             uint8_t  g = data[off + 1];
             uint8_t  b = data[off + 2];
@@ -188,21 +181,22 @@ public:
 
         const uint32_t consumed_b = (pixel_idx - p0) * bpp;
         if (consumed_b < static_cast<uint32_t>(size)) {
-            log.error("[IMAGE-SLV] extra data vs preset ", img_width, "x", img_height, ": ",
+            log.error("[IMAGE-SLV] extra data vs preset ", image_info->width, "x", image_info->height, ": ",
                       static_cast<uint32_t>(size) - consumed_b, " bytes");
         }
 
         if (pixel_idx >= total_pixels) {
             receiving = false;
+            bmp.write(filename);
             log.info("[IMAGE-SLV] Image receive complete. Resolution=",
-                     img_width, "x", img_height);
+                     image_info->width, "x", image_info->height);
         }
     }
 
-    /// @brief Save received image to BMP file
+    /// @brief Write received image to BMP file
     /// @param filename Path to output BMP file
     /// @return true if BMP saved successfully, false otherwise
-    bool save_bmp(const std::string& filename) {
+    bool write_file(const std::string& filename) {
         bool success = bmp.write(filename);
         if (success) {
             log.info("[IMAGE-SLV] Saved BMP: ", filename);
@@ -210,13 +204,6 @@ public:
             log.error("[IMAGE-SLV] Failed to save BMP: ", filename);
         }
         return success;
-    }
-
-    /// @brief Save received image to BMP file (alias of save_bmp)
-    /// @param filename Path to output BMP file
-    /// @return true if BMP saved successfully, false otherwise
-    bool save_frame(const std::string& filename) {
-        return save_bmp(filename);
     }
 };
 
