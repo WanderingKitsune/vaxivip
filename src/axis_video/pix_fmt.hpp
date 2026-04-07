@@ -27,7 +27,9 @@
  */
 enum PixlFmt {
     PIX_FMT_NONE = -1,
-    PIX_FMT_YUV444P = 0
+    PIX_FMT_YUV444P = 0,
+    PIX_FMT_YUV422P = 1,
+    PIX_FMT_YUV420P = 2
 };
 
 /** @} */ // end of group axis_video

@@ -42,6 +42,10 @@ uint32_t FrameInfo::plane_width(uint32_t plane_index) const {
     switch (pix_fmt) {
         case PIX_FMT_YUV444P:
             return width;
+        case PIX_FMT_YUV422P:
+            return (plane_index == 0) ? width : (width / 2);
+        case PIX_FMT_YUV420P:
+            return (plane_index == 0) ? width : (width / 2);
         default:
             return 0;
     }
@@ -53,7 +57,10 @@ uint32_t FrameInfo::plane_height(uint32_t plane_index) const {
         return 0;
     switch (pix_fmt) {
         case PIX_FMT_YUV444P:
+        case PIX_FMT_YUV422P:
             return height;
+        case PIX_FMT_YUV420P:
+            return (plane_index == 0) ? height : (height / 2);
         default:
             return 0;
     }
@@ -87,6 +94,10 @@ std::size_t FrameMem::plane_offset(uint32_t frame_index, uint32_t plane_index, u
 // Initialize frame memory with given frame information
 bool FrameMem::init(const FrameInfo& info) {
     if (info.frame_total == 0 || info.width == 0 || info.height == 0 || info.pix_fmt == PIX_FMT_NONE)
+        return false;
+    if (info.pix_fmt == PIX_FMT_YUV422P && (info.width & 1u))
+        return false;
+    if (info.pix_fmt == PIX_FMT_YUV420P && ((info.width & 1u) || (info.height & 1u)))
         return false;
     info_ = info;
     for (uint32_t p = 0; p < 3; ++p) {

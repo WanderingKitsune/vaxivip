@@ -101,6 +101,28 @@ public:
             end_of_frame = false;
             return;
         }
+        if (fi.pix_fmt == PIX_FMT_YUV422P && (fi.width & 1u)) {
+            log.error("axis_video_slave recv_frames: YUV422P requires even width");
+            frames_mode = false;
+            frames_received = 0;
+            output_file.clear();
+            append_to_existing = false;
+            busy = false;
+            done = true;
+            end_of_frame = false;
+            return;
+        }
+        if (fi.pix_fmt == PIX_FMT_YUV420P && ((fi.width & 1u) || (fi.height & 1u))) {
+            log.error("axis_video_slave recv_frames: YUV420P requires even width/height");
+            frames_mode = false;
+            frames_received = 0;
+            output_file.clear();
+            append_to_existing = false;
+            busy = false;
+            done = true;
+            end_of_frame = false;
+            return;
+        }
         frame_info = fi;
         frames_received = 0;
         output_file = filename;
@@ -254,7 +276,7 @@ private:
 
     bool write_received_frame(const std::string& filename, bool append) {
         FrameInfo fi{};
-        fi.pix_fmt = PIX_FMT_YUV444P;
+        fi.pix_fmt = frame_info.pix_fmt;
         fi.width = frame_info.width;
         fi.height = frame_info.height;
         fi.color_depth = frame_info.color_depth;
@@ -272,17 +294,55 @@ private:
                 log.error("axis_video_slave write_received_frame: write_line Y failed, y=", y);
                 return false;
             }
-            for (uint32_t x = 0; x < frame_info.width; ++x)
-                row[x] = static_cast<uint16_t>(u_plane[static_cast<size_t>(y) * frame_info.width + x]);
-            if (!fm.write_line(0, 1, y, row)) {
-                log.error("axis_video_slave write_received_frame: write_line U failed, y=", y);
-                return false;
-            }
-            for (uint32_t x = 0; x < frame_info.width; ++x)
-                row[x] = static_cast<uint16_t>(v_plane[static_cast<size_t>(y) * frame_info.width + x]);
-            if (!fm.write_line(0, 2, y, row)) {
-                log.error("axis_video_slave write_received_frame: write_line V failed, y=", y);
-                return false;
+            if (frame_info.pix_fmt == PIX_FMT_YUV422P) {
+                const uint32_t cw = frame_info.width / 2u;
+                row.resize(cw);
+                for (uint32_t x = 0; x < cw; ++x)
+                    row[x] = static_cast<uint16_t>(u_plane[static_cast<size_t>(y) * frame_info.width + (x * 2u)]);
+                if (!fm.write_line(0, 1, y, row)) {
+                    log.error("axis_video_slave write_received_frame: write_line U failed, y=", y);
+                    return false;
+                }
+                for (uint32_t x = 0; x < cw; ++x)
+                    row[x] = static_cast<uint16_t>(v_plane[static_cast<size_t>(y) * frame_info.width + (x * 2u)]);
+                if (!fm.write_line(0, 2, y, row)) {
+                    log.error("axis_video_slave write_received_frame: write_line V failed, y=", y);
+                    return false;
+                }
+                row.resize(frame_info.width);
+            } else if (frame_info.pix_fmt == PIX_FMT_YUV420P) {
+                // write chroma only on even luma lines (chroma has half height)
+                if ((y & 1u) == 0u) {
+                    const uint32_t cy = y / 2u;
+                    const uint32_t cw = frame_info.width / 2u;
+                    row.resize(cw);
+                    for (uint32_t x = 0; x < cw; ++x)
+                        row[x] = static_cast<uint16_t>(u_plane[static_cast<size_t>(y) * frame_info.width + (x * 2u)]);
+                    if (!fm.write_line(0, 1, cy, row)) {
+                        log.error("axis_video_slave write_received_frame: write_line U failed, y=", y);
+                        return false;
+                    }
+                    for (uint32_t x = 0; x < cw; ++x)
+                        row[x] = static_cast<uint16_t>(v_plane[static_cast<size_t>(y) * frame_info.width + (x * 2u)]);
+                    if (!fm.write_line(0, 2, cy, row)) {
+                        log.error("axis_video_slave write_received_frame: write_line V failed, y=", y);
+                        return false;
+                    }
+                    row.resize(frame_info.width);
+                }
+            } else {
+                for (uint32_t x = 0; x < frame_info.width; ++x)
+                    row[x] = static_cast<uint16_t>(u_plane[static_cast<size_t>(y) * frame_info.width + x]);
+                if (!fm.write_line(0, 1, y, row)) {
+                    log.error("axis_video_slave write_received_frame: write_line U failed, y=", y);
+                    return false;
+                }
+                for (uint32_t x = 0; x < frame_info.width; ++x)
+                    row[x] = static_cast<uint16_t>(v_plane[static_cast<size_t>(y) * frame_info.width + x]);
+                if (!fm.write_line(0, 2, y, row)) {
+                    log.error("axis_video_slave write_received_frame: write_line V failed, y=", y);
+                    return false;
+                }
             }
         }
         if (!fm.write_file(filename, append)) {

@@ -21,6 +21,10 @@
 #include "axis_video.hpp"
 #include "axis_video_format.hpp"
 
+#if !defined(TB_PIXFMT_YUV444) && !defined(TB_PIXFMT_YUV422) && !defined(TB_PIXFMT_YUV420)
+#define TB_PIXFMT_YUV420
+#endif
+
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
     Verilated::traceEverOn(true);
@@ -67,12 +71,21 @@ int main(int argc, char** argv) {
     top->axis_clk = 0;
     top->axis_rst = 1;
 
-    std::string input_yuv = "test_320x240_yuv444p_2frame.yuv";
+    std::string input_yuv;
     std::string output_yuv = "out.yuv";
     std::remove(output_yuv.c_str());
 
     FrameInfo info;
+#ifdef TB_PIXFMT_YUV422
+    input_yuv = "test_320x240_yuv422p_2frame.yuv";
+    info.pix_fmt = PIX_FMT_YUV422P;
+#elif defined(TB_PIXFMT_YUV420)
+    input_yuv = "test_320x240_yuv420p_2frame.yuv";
+    info.pix_fmt = PIX_FMT_YUV420P;
+#else
+    input_yuv = "test_320x240_yuv444p_2frame.yuv";
     info.pix_fmt = PIX_FMT_YUV444P;
+#endif
     info.width = 320;
     info.height = 240;
     info.color_depth = COLOR_DEPTH_8;

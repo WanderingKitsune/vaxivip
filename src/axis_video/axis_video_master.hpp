@@ -90,6 +90,14 @@ public:
             log.error("axis_video_master send_frames: color_depth must be 1..16 and <= BPC");
             return false;
         }
+        if (fi.pix_fmt == PIX_FMT_YUV422P && (fi.width & 1u)) {
+            log.error("axis_video_master send_frames: YUV422P requires even width");
+            return false;
+        }
+        if (fi.pix_fmt == PIX_FMT_YUV420P && ((fi.width & 1u) || (fi.height & 1u))) {
+            log.error("axis_video_master send_frames: YUV420P requires even width/height");
+            return false;
+        }
         frame_info = fi;
         if (!frames_.init(fi)) {
             log.error("axis_video_master send_frames: FrameMem init failed");
@@ -179,8 +187,9 @@ private:
         for (uint32_t y = 0; y < frame_info.height; ++y) {
             std::vector<uint16_t> ly, lu, lv;
             frames_.read_line(frame_index, 0, y, ly);
-            frames_.read_line(frame_index, 1, y, lu);
-            frames_.read_line(frame_index, 2, y, lv);
+            const uint32_t cy = (frame_info.pix_fmt == PIX_FMT_YUV420P) ? (y / 2u) : y;
+            frames_.read_line(frame_index, 1, cy, lu);
+            frames_.read_line(frame_index, 2, cy, lv);
             const uint32_t nbeats = (frame_info.width + PPC - 1u) / PPC;
             std::vector<uint8_t> line_data;
             line_data.reserve(static_cast<size_t>(nbeats) * bytes_per_beat);
@@ -188,9 +197,12 @@ private:
             for (uint32_t b = 0; b < nbeats; ++b) {
                 for (uint32_t p = 0; p < PPC; ++p) {
                     const uint32_t x = b * PPC + p;
+                    const bool chroma_half_w =
+                        (frame_info.pix_fmt == PIX_FMT_YUV422P) || (frame_info.pix_fmt == PIX_FMT_YUV420P);
+                    const uint32_t cidx = chroma_half_w ? (x / 2u) : x;
                     const uint16_t yv = x < frame_info.width ? ly[x] : 0;
-                    const uint16_t uv = x < frame_info.width ? lu[x] : 0;
-                    const uint16_t vv = x < frame_info.width ? lv[x] : 0;
+                    const uint16_t uv = x < frame_info.width ? lu[cidx] : 0;
+                    const uint16_t vv = x < frame_info.width ? lv[cidx] : 0;
                     comp[p * 3u + 0u] = sample_to_axis(yv);
                     comp[p * 3u + 1u] = sample_to_axis(uv);
                     comp[p * 3u + 2u] = sample_to_axis(vv);
