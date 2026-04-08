@@ -22,7 +22,7 @@
 #include "axis_video_format.hpp"
 
 #if !defined(TB_PIXFMT_YUV444) && !defined(TB_PIXFMT_YUV422) && !defined(TB_PIXFMT_YUV420)
-#define TB_PIXFMT_YUV420
+#define TB_PIXFMT_YUV444
 #endif
 
 int main(int argc, char** argv) {
