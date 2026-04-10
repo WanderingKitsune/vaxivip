@@ -90,12 +90,13 @@ public:
             log.error("axis_video_master send_frames: color_depth must be 1..16 and <= BPC");
             return false;
         }
-        if (fi.pix_fmt == PIX_FMT_YUV422P && (fi.width & 1u)) {
-            log.error("axis_video_master send_frames: YUV422P requires even width");
+        if (fi.axis_pix_fmt() == AXIS_PIX_FMT_YUYV && ((fi.width & 1u) || (PPC & 1u))) {
+            log.error("axis_video_master send_frames: AXIS YUYV requires even width and even PPC");
             return false;
         }
-        if (fi.pix_fmt == PIX_FMT_YUV420P && ((fi.width & 1u) || (fi.height & 1u))) {
-            log.error("axis_video_master send_frames: YUV420P requires even width/height");
+        if (fi.pix_fmt == PIX_FMT_YUV420P &&
+            ((fi.width & 1u) || (fi.height & 1u) || (PPC & 1u))) {
+            log.error("axis_video_master send_frames: YUV420P requires even width/height and even PPC");
             return false;
         }
         frame_info = fi;
@@ -133,14 +134,13 @@ public:
 
     /// @brief Drive outputs to DUT and check if sending complete
     void update_output() {
+        const bool tx_was_active = busy && !axis_mst.tx_buf.empty();
+        axis_mst.update_output();
         if (!busy)
             return;
         end_of_frame = false;
 
-        const bool tx_was_active = !axis_mst.tx_buf.empty();
-        axis_mst.update_output();
         const bool tx_is_active = !axis_mst.tx_buf.empty();
-
         if (tx_was_active && !tx_is_active) {
             if (frame_info.height != 0) {
                 ++lines_sent_;
@@ -193,22 +193,46 @@ private:
             const uint32_t nbeats = (frame_info.width + PPC - 1u) / PPC;
             std::vector<uint8_t> line_data;
             line_data.reserve(static_cast<size_t>(nbeats) * bytes_per_beat);
-            std::vector<uint16_t> comp(comp_per_beat);
+            const AxisPixFmt afmt = frame_info.axis_pix_fmt();
+            const bool pack_yuyv = (afmt == AXIS_PIX_FMT_YUYV);
+            const uint32_t ncomp_pack = pack_yuyv ? (2u * PPC) : comp_per_beat;
+            std::vector<uint16_t> comp(ncomp_pack);
+            const bool chroma_line =
+                (frame_info.pix_fmt != PIX_FMT_YUV420P) || ((y & 1u) == 0u);
             for (uint32_t b = 0; b < nbeats; ++b) {
-                for (uint32_t p = 0; p < PPC; ++p) {
-                    const uint32_t x = b * PPC + p;
-                    const bool chroma_half_w =
-                        (frame_info.pix_fmt == PIX_FMT_YUV422P) || (frame_info.pix_fmt == PIX_FMT_YUV420P);
-                    const uint32_t cidx = chroma_half_w ? (x / 2u) : x;
-                    const uint16_t yv = x < frame_info.width ? ly[x] : 0;
-                    const uint16_t uv = x < frame_info.width ? lu[cidx] : 0;
-                    const uint16_t vv = x < frame_info.width ? lv[cidx] : 0;
-                    comp[p * 3u + 0u] = sample_to_axis(yv);
-                    comp[p * 3u + 1u] = sample_to_axis(uv);
-                    comp[p * 3u + 2u] = sample_to_axis(vv);
+                if (pack_yuyv) {
+                    for (uint32_t pair = 0; pair < PPC / 2u; ++pair) {
+                        const uint32_t x0 = b * PPC + pair * 2u;
+                        const uint32_t x1 = x0 + 1u;
+                        const uint32_t cidx = x0 / 2u;
+                        const uint16_t y0 = x0 < frame_info.width ? ly[x0] : 0;
+                        const uint16_t y1 = x1 < frame_info.width ? ly[x1] : 0;
+                        const uint32_t base = pair * 4u;
+                        comp[base + 0u] = sample_to_axis(y0);
+                        comp[base + 2u] = sample_to_axis(y1);
+                        if (chroma_line) {
+                            const uint16_t uv = x0 < frame_info.width ? lu[cidx] : 0;
+                            const uint16_t vv = x0 < frame_info.width ? lv[cidx] : 0;
+                            comp[base + 1u] = sample_to_axis(uv);
+                            comp[base + 3u] = sample_to_axis(vv);
+                        } else {
+                            comp[base + 1u] = 0;
+                            comp[base + 3u] = 0;
+                        }
+                    }
+                } else {
+                    for (uint32_t p = 0; p < PPC; ++p) {
+                        const uint32_t x = b * PPC + p;
+                        const uint16_t yv = x < frame_info.width ? ly[x] : 0;
+                        const uint16_t uv = x < frame_info.width ? lu[x] : 0;
+                        const uint16_t vv = x < frame_info.width ? lv[x] : 0;
+                        comp[p * 3u + 0u] = sample_to_axis(yv);
+                        comp[p * 3u + 1u] = sample_to_axis(uv);
+                        comp[p * 3u + 2u] = sample_to_axis(vv);
+                    }
                 }
                 uint8_t beat[sizeof(uint64_t) * 4]{};
-                pack_beat(beat, comp.data(), comp_per_beat);
+                pack_beat(beat, comp.data(), ncomp_pack);
                 for (uint32_t i = 0; i < bytes_per_beat; ++i)
                     line_data.push_back(beat[i]);
             }

@@ -124,6 +124,7 @@ int main(int argc, char** argv) {
                 }
                 std::cout << std::dec << std::endl;
             }
+            axis_slv.set_tready(((tick_count >> 1) & 1u) == 0);
             axis_mst.update_output();
             axis_slv.update_output();
         }

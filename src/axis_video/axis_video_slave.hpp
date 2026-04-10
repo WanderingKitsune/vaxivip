@@ -101,8 +101,8 @@ public:
             end_of_frame = false;
             return;
         }
-        if (fi.pix_fmt == PIX_FMT_YUV422P && (fi.width & 1u)) {
-            log.error("axis_video_slave recv_frames: YUV422P requires even width");
+        if (fi.axis_pix_fmt() == AXIS_PIX_FMT_YUYV && ((fi.width & 1u) || (PPC & 1u))) {
+            log.error("axis_video_slave recv_frames: AXIS YUYV requires even width and even PPC");
             frames_mode = false;
             frames_received = 0;
             output_file.clear();
@@ -112,8 +112,9 @@ public:
             end_of_frame = false;
             return;
         }
-        if (fi.pix_fmt == PIX_FMT_YUV420P && ((fi.width & 1u) || (fi.height & 1u))) {
-            log.error("axis_video_slave recv_frames: YUV420P requires even width/height");
+        if (fi.pix_fmt == PIX_FMT_YUV420P &&
+            ((fi.width & 1u) || (fi.height & 1u) || (PPC & 1u))) {
+            log.error("axis_video_slave recv_frames: YUV420P requires even width/height and even PPC");
             frames_mode = false;
             frames_received = 0;
             output_file.clear();
@@ -200,6 +201,11 @@ public:
         for (uint32_t ln = 0; ln < nlines; ++ln) {
             const uint8_t* row = data.data() + ln * line_b;
             const uint32_t nbeats = line_b / bytes_per_beat;
+            const uint32_t y_row = pixel_idx / frame_info.width;
+            const AxisPixFmt afmt = frame_info.axis_pix_fmt();
+            const bool y420_odd =
+                (afmt == AXIS_PIX_FMT_YUYV) && (frame_info.pix_fmt == PIX_FMT_YUV420P) &&
+                ((y_row & 1u) != 0u);
             for (uint32_t bt = 0; bt < nbeats; ++bt) {
                 const uint8_t* bptr = row + bt * bytes_per_beat;
                 for (uint32_t p = 0; p < PPC; ++p) {
@@ -208,9 +214,27 @@ public:
                         continue;
                     if (pixel_idx >= total_pixels)
                         break;
-                    y_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, p * 3u + 0u));
-                    u_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, p * 3u + 1u));
-                    v_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, p * 3u + 2u));
+                    if (afmt == AXIS_PIX_FMT_YUYV && !y420_odd) {
+                        const uint32_t pair = p / 2u;
+                        const uint32_t base = pair * 4u;
+                        const uint32_t yi = (p & 1u) ? (base + 2u) : (base + 0u);
+                        y_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, yi));
+                        u_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, base + 1u));
+                        v_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, base + 3u));
+                    } else if (y420_odd) {
+                        const uint32_t pair = p / 2u;
+                        const uint32_t base = pair * 4u;
+                        const uint32_t yi = (p & 1u) ? (base + 2u) : (base + 0u);
+                        y_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, yi));
+                        const size_t up =
+                            static_cast<size_t>(pixel_idx) - static_cast<size_t>(frame_info.width);
+                        u_plane[pixel_idx] = u_plane[up];
+                        v_plane[pixel_idx] = v_plane[up];
+                    } else {
+                        y_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, p * 3u + 0u));
+                        u_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, p * 3u + 1u));
+                        v_plane[pixel_idx] = axis_to_sample(unpack_comp(bptr, p * 3u + 2u));
+                    }
                     ++pixel_idx;
                 }
             }

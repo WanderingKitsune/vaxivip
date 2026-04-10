@@ -24,12 +24,30 @@
 
 /**
  * @brief Axis pixel format types
+ *       PPC=4
+ *      AXIS Data     144                                0
+ * AXIS_PIX_FMT_YUV:   V3 U3 Y3 V2 U2 Y2 V1 U1 Y1 V0 U0 Y0
+ * AXIS_PIX_FMT_GBR:   R3 B3 G3 R2 B2 G2 R1 B1 G1 R0 B0 G0
+ * AXIS_PIX_FMT_YUYV:  -  -  -  -  V1 Y3 U1 Y2 V1 Y1 U0 Y0
  *
- *  Pixel counter    max_ppc ...  pix1   pix0
- * AXIS_PIX_FMT_YUV:   V U Y ... V U Y  V U Y
- * AXIS_PIX_FMT_GBR:   R B G ... R B G  R B G
- * AXIS_PIX_FMT_YUYV:   V Y  ...  V Y    U Y
+ *       PPC=2
+ *      AXIS Data      72              0
+ * AXIS_PIX_FMT_YUV:   V1 U1 Y1 V0 U0 Y0
+ * AXIS_PIX_FMT_GBR:   R1 B1 G1 R0 B0 G0
+ * AXIS_PIX_FMT_YUYV:  -  -  V1 Y1 U0 Y0
+ *
+ * AXIS_PIX_FMT_YUYV format for YUV420:
+ *     PPC=4
+ *    AXIS Data                    96                    0
+ *  YUV420 Even Lines(first line)  V1 Y2 U1 Y1 V0 Y1 U0 Y0
+ *  YUV420 Odd Lines               z  Y2 z  Y1 z  Y1 z  Y0
+ *
+ *    PPC=2
+ *    AXIS Data                    48        0
+ *  YUV420 Even Lines(first line)  V0 Y1 U0 Y0
+ *  YUV420 Odd Lines               z  Y1 z  Y0
  */
+
 enum AxisPixFmt : uint32_t {
     AXIS_PIX_FMT_NONE = 0,
     AXIS_PIX_FMT_GBR  = 0,

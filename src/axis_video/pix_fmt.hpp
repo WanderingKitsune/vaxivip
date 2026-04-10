@@ -19,6 +19,7 @@
 #ifndef PIX_FMT_HPP
 #define PIX_FMT_HPP
 
+#include "axis_video_format.hpp"
 #include <cstdint>
 
 /**
@@ -27,10 +28,29 @@
  */
 enum PixlFmt {
     PIX_FMT_NONE = -1,
-    PIX_FMT_YUV444P = 0,
-    PIX_FMT_YUV422P = 1,
-    PIX_FMT_YUV420P = 2
+    PIX_FMT_YUV444P = 0,   ///< planar YUV 4:4:4
+    PIX_FMT_YUV422P = 1,   ///< planar YUV 4:2:2
+    PIX_FMT_YUV420P = 2,   ///< planar YUV 4:2:0
+    PIX_FMT_RGB24 = 3,     ///< packed RGB 8:8:8, 24bpp, RGBRGB...
+    PIX_FMT_BGR24 = 4,     ///< packed RGB 8:8:8, 24bpp, BGRBGR...
 };
+
+inline constexpr AxisPixFmt pix_fmt_axis_pack(PixlFmt fmt) {
+    switch (fmt) {
+    case PIX_FMT_NONE:
+        return AXIS_PIX_FMT_NONE;
+    case PIX_FMT_RGB24:
+    case PIX_FMT_BGR24:
+        return AXIS_PIX_FMT_GBR;
+    case PIX_FMT_YUV444P:
+        return AXIS_PIX_FMT_YUV;
+    case PIX_FMT_YUV422P:
+    case PIX_FMT_YUV420P:
+        return AXIS_PIX_FMT_YUYV;
+    default:
+        return AXIS_PIX_FMT_NONE;
+    }
+}
 
 /** @} */ // end of group axis_video
 

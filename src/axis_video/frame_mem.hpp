@@ -37,7 +37,7 @@
 class FrameInfo : public VideoInfo {
 public:
     PixlFmt pix_fmt;
-
+    AxisPixFmt axis_pix_fmt() const { return pix_fmt_axis_pack(pix_fmt); }
     /// Get plane width for given plane index
     uint32_t plane_width(uint32_t plane_index) const;
     /// Get plane height for given plane index

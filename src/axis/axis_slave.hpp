@@ -37,6 +37,7 @@ public:
     axis_slave_ptr<DATA_WIDTH, ID_WIDTH, DEST_WIDTH, USER_WIDTH> port;        ///< Interface signal pointers
 
     // Registered Input Signals
+    bool tready_i;
     bool tready_o;
     bool tvalid_i;
     uint64_t tkeep_i;
@@ -80,6 +81,7 @@ public:
 
     /// @brief Cycle tick
     void update_input() {
+        tready_i = *(port.tready);
         tvalid_i = *(port.tvalid);
         tkeep_i = *(port.tkeep);
         tlast_i = *(port.tlast);
@@ -92,7 +94,7 @@ public:
     }
 
     void update_output() {
-        if (tvalid_i) {
+        if (tvalid_i && tready_i) {
             for (int i=0;i<DATA_WIDTH/8;i++) {
                 if ((tkeep_i & ((uint64_t)1 << i)) != 0) {
                     recv_buf.push_back(tdata_i[i]);
