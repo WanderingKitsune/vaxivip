@@ -13,11 +13,11 @@
 
 | VIP Module | Protocol | Core Features | Typical Use Case |
 |------------|----------|---------------|------------------|
-| **`axi`** (`src/axi/`) | AXI4 | Memory-mapped read/write, burst transfers | Processor/memory bus verification |
-| **`axil`** (`src/axil/`) | AXI4-Lite | Simple register access | Peripheral register access verification |
-| **`axis`** (`src/axis/`) | AXI4-Stream | Stream data transfer | Video streaming, network packet transmission |
-| **`axis_image`** (`src/axis_image/`) | AXI4-Stream | BMP image streaming with configurable BPC/PPC (Xilinx AXI4-Stream Video compliant) | Image processing IP verification (BMP I/O) |
-| **`axis_video`** (`src/axis_video/`) | AXI4-Stream | YUV planar video frame streaming with configurable BPC/PPC | Video processing IP verification (YUV I/O) |
+| **`axi`** (`src/axi/`) | AXI4 | Master/Slave interface, supports **FIXED**, **INCR**, **WRAP** burst transfers | Processor/memory bus verification |
+| **`axil`** (`src/axil/`) | AXI4-Lite | Master/Slave interface | AXI4-Lite register access verification |
+| **`axis`** (`src/axis/`) | AXI4-Stream | Master/Slave interface | AXI-Stream timing verification |
+| **`axis_image`** (`src/axis_image/`) | AXI4-Stream | Bidirectional conversion between BMP images and AXI4-Stream, supports RGB format (Xilinx AXI4-Stream Video compliant) | Image processing IP verification |
+| **`axis_video`** (`src/axis_video/`) | AXI4-Stream | Bidirectional conversion between planar video frames and AXI4-Stream, supports YUV444/422/420 formats (Xilinx AXI4-Stream Video compliant) | Video processing IP verification |
 
 ## 🚀 Quick Start
 
@@ -147,6 +147,24 @@ while (!Verilated::gotFinish()) {
 
 **Standard Compliance**: The `axis_image` module follows the **Xilinx AXI4-Stream Video IP and System Design** standard, ensuring compatibility with Xilinx/AMD video processing IP cores. For detailed specifications, refer to the [Xilinx AXI Video IP Product Guide](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip).
 
+```
+          __    __    __    __          __    __    __
+clk    __/  \__/  \__/  \__/  \__XXXX__/  \__/  \__/  \___XXXX
+               ______ _____ _____       _____       ______
+tdata  XXXXXXXX__D0__X__D1_X__D2_XXXXXXX__Dn_XXXXXXX__D0__XXXX
+               ______ _____ _____       _____       ______
+tkeep  XXXXXXXX__K0__X__K1_X__K0_XXXXXXX__Kn_XXXXXXX__K0__XXXX
+                _____
+tuser  ________/ sof \________________________________________
+                                        _____
+tlast  ________________________________/ eol \________________
+
+                ______________________________      __________
+tvalid ________/     line0                    \____/   line1
+       _______________________________________________________
+tready
+```
+
 **Image Master** (BMP to AXI4-Stream):
 ```cpp
 // Parameters: <BPC (bits per channel), PPC (pixels per beat)>
@@ -171,7 +189,7 @@ if (img_mst.eof()) {
 
 **Image Slave** (AXI4-Stream to BMP):
 ```cpp
-axis_image_slave<8, 4> img_slv{m_slv_port};
+axis_image_slave<8, 4> img_slv(m_slv_port);
 
 // Prepare to receive image (info contains width/height from master)
 img_slv.recv_frame(&info, "output.bmp");
@@ -184,6 +202,8 @@ img_slv.update_output();
 // Image is automatically saved when reception completes
 // Can also manually save with: img_slv.write_file("output.bmp");
 ```
+
+**Video VIP** (`axis_video`) provides bidirectional conversion between planar video frames and AXI4-Stream, supporting multiple video formats including YUV444/422/420, also compliant with Xilinx AXI4-Stream Video standard, suitable for video processing IP verification.
 
 ## 🔧 Running Tests
 
@@ -216,13 +236,13 @@ Copyright (c) 2025 WanderingKitsune
 
 ## ✨ 特性概览
 
-| VIP模块 | 协议 | 核心功能 | 典型应用 |
-|---------|------|----------|----------|
-| **`axi`**（`src/axi/`） | AXI4 | 内存映射读写、突发传输 | 处理器/内存总线验证 |
-| **`axil`**（`src/axil/`） | AXI4-Lite | 简单寄存器访问 | 外设寄存器访问验证 |
-| **`axis`**（`src/axis/`） | AXI4-Stream | 流数据传输 | 视频流、网络包传输 |
-| **`axis_image`**（`src/axis_image/`） | AXI4-Stream | BMP图像流，可配置BPC/PPC (遵循Xilinx AXI4-Stream Video标准) | 图像处理IP验证（BMP输入/输出） |
-| **`axis_video`**（`src/axis_video/`） | AXI4-Stream | YUV planar视频帧流，可配置BPC/PPC | 视频处理IP验证（YUV输入/输出） |
+| VIP模块                               | 协议        | 功能描述                                                     | 典型应用                |
+| ------------------------------------- | ----------- | ------------------------------------------------------------ | ----------------------- |
+| **`axi`**（`src/axi/`）               | AXI4        | Master/Slave接口，支持FIXED (固定)，INCR (递增)，WRAP (回环) 突发 | 处理器/内存总线验证     |
+| **`axil`**（`src/axil/`）             | AXI4-Lite   | Master/Slave接口                                             | axi4-lite寄存器访问验证 |
+| **`axis`**（`src/axis/`）             | AXI4-Stream | Master/Slave接口                                             | axi-stream时序验证      |
+| **`axis_image`**（`src/axis_image/`） | AXI4-Stream | BMP图像与AXI4-Stream双向转换，支持RGB格式（遵循Xilinx AXI4-Stream Video标准） | 图像处理IP验证          |
+| **`axis_video`**（`src/axis_video/`） | AXI4-Stream | 平面视频帧与AXI4-Stream双向转换，支持YUV444/YUV422/YUV420格式（遵循Xilinx AXI4-Stream Video标准） | 视频处理IP验证          |
 
 ## 🚀 快速开始
 
@@ -346,11 +366,30 @@ while (!Verilated::gotFinish()) {
 }
 ```
 
-### 5. AXI4-Stream 图像VIP功能
+### 5. 图像VIP功能
 
 **标准遵循**：`axis_image` 模块遵循 **Xilinx AXI4-Stream Video IP and System Design** 标准，确保与 Xilinx/AMD 视频处理 IP 核的兼容性。详细规范请参考 [Xilinx AXI Video IP 产品指南](https://docs.xilinx.com/r/en-US/pg034_axi_video_ip)。
 
-**图像Master** (BMP转AXI4-Stream):
+```
+          __    __    __    __          __    __    __
+clk    __/  \__/  \__/  \__/  \__XXXX__/  \__/  \__/  \___XXXX
+               ______ _____ _____       _____       ______
+tdata  XXXXXXXX__D0__X__D1_X__D2_XXXXXXX__Dn_XXXXXXX__D0__XXXX
+               ______ _____ _____       _____       ______
+tkeep  XXXXXXXX__K0__X__K1_X__K0_XXXXXXX__Kn_XXXXXXX__K0__XXXX
+                _____
+tuser  ________/ sof \________________________________________
+                                        _____
+tlast  ________________________________/ eol \________________
+
+                ______________________________      __________
+tvalid ________/     line0                    \____/   line1
+       _______________________________________________________
+tready
+```
+
+**图像Master** (BMP转AXI4-Stream)
+
 ```cpp
 // 参数: <BPC (每通道位数), PPC (每拍像素数)>
 axis_image_master<8, 4> img_mst(s_mst_port);
@@ -374,7 +413,7 @@ if (img_mst.eof()) {
 
 **图像Slave** (AXI4-Stream转BMP):
 ```cpp
-axis_image_slave<8, 4> img_slv{m_slv_port};
+axis_image_slave<8, 4> img_slv(m_slv_port);
 
 // 准备接收图像（info包含来自master的宽度/高度信息）
 img_slv.recv_frame(&info, "output.bmp");
@@ -387,6 +426,8 @@ img_slv.update_output();
 // 接收完成后图像自动保存
 // 也可以手动保存：img_slv.write_file("output.bmp");
 ```
+
+**视频VIP** (`axis_video`) 提供平面视频帧与AXI4-Stream的双向转换，支持YUV444/422/420等多种视频格式，同样遵循Xilinx AXI4-Stream Video标准，适用于视频处理IP验证。
 
 ## 🔧 运行测试
 
