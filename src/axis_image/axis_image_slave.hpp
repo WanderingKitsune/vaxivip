@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_image_slave.hpp
  * @brief       AXI Stream Image Slave (AXI Stream to BMP)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Receives AXI4-Stream image by preset resolution and writes BMP with
  *              configurable bits per channel and pixels per cycle.

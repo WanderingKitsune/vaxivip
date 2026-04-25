@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        sig.hpp
  * @brief       Signal type definitions for Verilator simulation
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     This header defines macros for declaring Verilator signal types
  *              based on bit width.

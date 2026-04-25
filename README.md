@@ -32,7 +32,7 @@ brew install verilator
 
 ### 2. Clone and Explore
 ```bash
-git clone https://github.com/WanderingKitsune/vaxivip.git
+git clone https://github.com/dozecat/vaxivip.git
 cd vaxivip
 ```
 
@@ -225,7 +225,7 @@ The design inspiration for this project comes from [soc-simulator](https://githu
 
 MIT License
 
-Copyright (c) 2025 WanderingKitsune
+Copyright (c) 2025 dozecat
 
 ---
 
@@ -257,7 +257,7 @@ brew install verilator
 
 ### 2. 克隆项目
 ```bash
-git clone https://github.com/WanderingKitsune/vaxivip.git
+git clone https://github.com/dozecat/vaxivip.git
 cd vaxivip
 ```
 
@@ -450,4 +450,4 @@ img_slv.update_output();
 
 MIT License
 
-Copyright (c) 2025 WanderingKitsune
+Copyright (c) 2025 dozecat

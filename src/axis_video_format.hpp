@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_video_format.hpp
  * @brief       AXI Stream Video Format Definitions
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Defines pixel formats, bits per channel, pixels per cycle,
  *              and validation macros for AXI4-Stream video interfaces.

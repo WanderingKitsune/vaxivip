@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        frame_mem.cpp
  * @brief       Frame memory manager implementation for YUV planar video
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Implementation of FrameInfo and FrameMem classes for YUV planar
  *              video frame storage and I/O operations.

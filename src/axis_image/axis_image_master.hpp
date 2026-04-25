@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_image_master.hpp
  * @brief       AXI Stream Image Master (BMP to AXI Stream)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Loads BMP and drives AXI4-Stream image data with configurable
  *              bits per channel and pixels per cycle.

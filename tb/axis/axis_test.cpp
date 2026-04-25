@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_test.cpp
  * @brief       AXI4-Stream Testbench (C++)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Verilator C++ TB for AXI4-Stream. VIP: `src/axis/axis_prt.hpp`, `src/axis/axis.hpp`
  *              (include dirs from `tb/axis/Makefile`).

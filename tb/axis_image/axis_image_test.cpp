@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_image_test.cpp
  * @brief       AXI4-Stream Image Testbench (C++)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Verilator C++ TB: one image send/recv, save BMP. VIP: `src/axis_image/axis_image_vip.hpp`
  *              (stream structs from `src/axis/` via that header; include dirs from `tb/axis_image/Makefile`).

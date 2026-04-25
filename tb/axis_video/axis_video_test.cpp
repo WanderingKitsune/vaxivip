@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_video_test.cpp
  * @brief       AXI4-Stream Video Testbench (C++)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Verilator C++ TB: video send/recv, save YUV. VIP: `src/axis_video/axis_video.hpp`
  *              (stream structs from `src/axis/` via that header; include dirs from `tb/axis_video/Makefile`).

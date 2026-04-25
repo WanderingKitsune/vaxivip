@@ -1,11 +1,11 @@
 //*****************************************************************************
-// Copyright (C) 2025 WanderingKitsune. All rights reserved.
+// Copyright (C) 2025 dozecat. All rights reserved.
 // SPDX-License-Identifier: MIT
 //
 // File:        axis_image_test.sv
 // Description: AXI4-Stream Image Test Module
 // Note:        C++ DPI uses VIP headers under ../../src/axis_image/ (and ../../src/axis/; see Makefile -I).
-// Repository:  https://github.com/WanderingKitsune/vaxivip
+// Repository:  https://github.com/dozecat/vaxivip
 //*****************************************************************************
 
 `timescale 1ns / 1ps

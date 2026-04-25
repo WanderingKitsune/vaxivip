@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_image_vip.hpp
  * @brief       AXI Stream Image VIP Library - Top-level header
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Image-to-AXI and AXI-to-image VIP for BMP file streaming with
  *              configurable bits per channel and pixels per cycle.

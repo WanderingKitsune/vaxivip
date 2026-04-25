@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axi_test.cpp
  * @brief       AXI4 Testbench (C++)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Verilator C++ TB for AXI4. VIP: `src/axi/axi_ptr.hpp`, `src/axi/axi.hpp`
  *              (include dirs from `tb/axi/Makefile`).

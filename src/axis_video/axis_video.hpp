@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_video.hpp
  * @brief       AXI Stream Video VIP Library - Top-level header
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Video-to-AXI and AXI-to-video VIP for YUV frame streaming with
  *              configurable bits per channel and pixels per cycle.

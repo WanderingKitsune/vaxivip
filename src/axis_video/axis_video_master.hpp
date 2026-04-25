@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_video_master.hpp
  * @brief       AXI Stream Video Master (YUV frame buffer to AXI Stream)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Loads YUV planar frames and drives AXI4-Stream video data with
  *              configurable bits per channel and pixels per cycle.

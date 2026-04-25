@@ -1,10 +1,10 @@
 /******************************************************************************
- * Copyright (C) 2025 WanderingKitsune. All rights reserved.
+ * Copyright (C) 2025 dozecat. All rights reserved.
  * SPDX-License-Identifier: MIT
  *
  * @file        axis_video_slave.hpp
  * @brief       AXI Stream Video Slave (AXI Stream to YUV frame buffer)
- * @see         https://github.com/WanderingKitsune/vaxivip
+ * @see         https://github.com/dozecat/vaxivip
  *
  * @details     Receives AXI4-Stream video frames by preset resolution and writes YUV
  *              planar data with configurable bits per channel and pixels per cycle.
