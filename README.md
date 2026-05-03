@@ -81,12 +81,12 @@ make clean
 Add each relevant directory under `src/` to your compiler include path (e.g. `-Isrc/axi -Isrc/axil ...`, as in `tb/*/Makefile`). Then:
 
 ```cpp
-#include "axi_ptr.hpp"        // AXI4 signal structs (optional if only using BFM umbrella)
-#include "axi.hpp"            // AXI4 VIP (master + slave)
+#include "axi_ptr.hpp"    // AXI4 signal structs (optional if only using BFM umbrella)
+#include "axi.hpp"        // AXI4 VIP (master + slave)
 #include "axil_ptr.hpp"
-#include "axil.hpp"           // AXI4-Lite VIP
-#include "axis_prt.hpp"       // AXI4-Stream signal structs (optional)
-#include "axis.hpp"           // AXI4-Stream VIP
+#include "axil.hpp"       // AXI4-Lite VIP
+#include "axis_prt.hpp"   // AXI4-Stream signal structs (optional)
+#include "axis.hpp"       // AXI4-Stream VIP
 #include "axis_image.hpp" // AXI4-Stream image VIP
 #include "axis_video.hpp" // AXI4-Stream video VIP
 ```
@@ -153,7 +153,7 @@ clk    __/  \__/  \__/  \__/  \__XXXX__/  \__/  \__/  \___XXXX
                ______ _____ _____       _____       ______
 tdata  XXXXXXXX__D0__X__D1_X__D2_XXXXXXX__Dn_XXXXXXX__D0__XXXX
                ______ _____ _____       _____       ______
-tkeep  XXXXXXXX__K0__X__K1_X__K0_XXXXXXX__Kn_XXXXXXX__K0__XXXX
+tkeep  XXXXXXXX__K0__X__K1_X__K2_XXXXXXX__Kn_XXXXXXX__K0__XXXX
                 _____
 tuser  ________/ sof \________________________________________
                                         _____
@@ -217,7 +217,7 @@ Ensure you have:
 ### Execute Tests
 For basic testing, follow the same commands shown in the **Quick Start** section. Each test generates a `waveform.vcd` file for waveform viewing with GTKWave or other VCD viewers.
 
-## 🙏 Acknowledgements
+## 📝 Acknowledgements
 
 The design inspiration for this project comes from [soc-simulator](https://github.com/cyyself/soc-simulator). Thanks for its excellent concepts.
 
@@ -304,12 +304,12 @@ make clean
 将 `src` 下对应子目录加入编译 `-I` 路径（示例见各 `tb/*/Makefile`）。然后：
 
 ```cpp
-#include "axi_ptr.hpp"        // AXI4 信号结构（可省略，若只通过总头使用 BFM）
-#include "axi.hpp"            // AXI4 VIP
+#include "axi_ptr.hpp"   // AXI4 信号结构（可省略，若只通过总头使用 BFM）
+#include "axi.hpp"       // AXI4 VIP
 #include "axil_ptr.hpp"
-#include "axil.hpp"           // AXI4-Lite VIP
-#include "axis_prt.hpp"       // AXI4-Stream 信号结构（可省略）
-#include "axis.hpp"           // AXI4-Stream VIP
+#include "axil.hpp"      // AXI4-Lite VIP
+#include "axis_prt.hpp"  // AXI4-Stream 信号结构（可省略）
+#include "axis.hpp"      // AXI4-Stream VIP
 #include "axis_image.hpp" // AXI4-Stream 图像 VIP
 #include "axis_video.hpp" // AXI4-Stream 视频 VIP
 ```
@@ -376,7 +376,7 @@ clk    __/  \__/  \__/  \__/  \__XXXX__/  \__/  \__/  \___XXXX
                ______ _____ _____       _____       ______
 tdata  XXXXXXXX__D0__X__D1_X__D2_XXXXXXX__Dn_XXXXXXX__D0__XXXX
                ______ _____ _____       _____       ______
-tkeep  XXXXXXXX__K0__X__K1_X__K0_XXXXXXX__Kn_XXXXXXX__K0__XXXX
+tkeep  XXXXXXXX__K0__X__K1_X__K2_XXXXXXX__Kn_XXXXXXX__K0__XXXX
                 _____
 tuser  ________/ sof \________________________________________
                                         _____
@@ -442,7 +442,7 @@ img_slv.update_output();
 ### 执行测试
 基础测试请参考**快速开始**部分中的命令。每个测试都会生成 `waveform.vcd` 波形文件，可使用 GTKWave 或其他 VCD 查看器查看。
 
-## 🙏 致谢
+## 📝 致谢
 
 本项目的设计灵感来源于[soc-simulator](https://github.com/cyyself/soc-simulator)，感谢其优秀的构思。
 
